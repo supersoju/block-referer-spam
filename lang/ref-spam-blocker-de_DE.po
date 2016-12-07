@@ -1,0 +1,296 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Block Referer Spam\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: Fri Jul 17 2015 09:51:48 GMT+0200 (CEST)\n"
+"PO-Revision-Date: Mon Oct 19 2015 14:06:55 GMT+0200 (CEST)\n"
+"Last-Translator: root <root@root.root>\n"
+"Language-Team: \n"
+"Language: German\n"
+"Plural-Forms: nplurals=2; plural=n != 1\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-Basepath: .\n"
+"X-Poedit-SearchPath-0: .\n"
+"X-Poedit-KeywordsList: _:1;gettext:1;dgettext:2;ngettext:1,2;dngettext:2,3;"
+"__:1;_e:1;_c:1;_n:1,2;_n_noop:1,2;_nc:1,2;__ngettext:1,2;__ngettext_noop:1,2;"
+"_x:1,2c;_ex:1,2c;_nx:1,2,4c;_nx_noop:1,2,3c;_n_js:1,2;_nx_js:1,2,3c;"
+"esc_attr__:1;esc_html__:1;esc_attr_e:1;esc_html_e:1;esc_attr_x:1,2c;"
+"esc_html_x:1,2c;comments_number_link:2,3;t:1;st:1;trans:1;transChoice:1,2\n"
+"X-Loco-Target-Locale: de_DE\n"
+"X-Generator: Loco - https://localise.biz/"
+
+#. URI of the plugin
+msgid "https://wordpress.org/plugins/block-referer-spam"
+msgstr ""
+
+#. Author of the plugin
+msgid "codestic"
+msgstr ""
+
+#. Author URI of the plugin
+msgid "http://codestic.com"
+msgstr ""
+
+#: ../admin/dashboard.php:146
+msgid "The plugin will automatically convert URLs into the right format."
+msgstr "Das Plugin konvertiert URLs automatisch in das richtige Format."
+
+msgid "Block Referer Spam"
+msgstr "Referrer Spam Blockieren"
+
+#. Description of the plugin
+msgid ""
+"Prevents referer spam from accessing your site and cleans up your Google "
+"Analytics in the process."
+msgstr "Verhindert das Referer Spam in Ihre Google Analytics Statistiken geraten."
+
+#: ../admin/_sidebar.php:2
+msgid "About the Plugin"
+msgstr "Über dieses Plugin"
+
+#: ../admin/_sidebar.php:5
+msgid ""
+"<b>Block Referer Spam</b> aims at blocking all (or most) websites that use "
+"<a href=\"https://en.wikipedia.org/wiki/Referer_spam\" target=\"_blank\">Referer "
+"Spam</a> to promote their – often more than dodgy – website content."
+msgstr ""
+"<b>Block Referer Spam</b> ist darauf ausgelegt alle (oder fast alle) "
+"Webseiten, die vom sogenannten <a href=\"https://de.wikipedia."
+"org/wiki/Referrer-Spam\" target=\"_blank\">Referrer Spam</a> gebrauch machen, "
+"zu blockieren."
+
+#: ../admin/_sidebar.php:7
+msgid ""
+"This is accomplished by bots that very successfully simulate human behavior. "
+"They do this so well, that they even show up in <b>Google Analytics.</b>"
+msgstr ""
+"Dies geschieht meist durch \"Bots\", die wie Menschen, durch das Internet "
+"surfen und dabei fragwürdige Seiten bewerben - in Ihrem <b>Google "
+"Analytics</b>."
+
+#: ../admin/_sidebar.php:9
+msgid ""
+"This plugin does not need any further configuration. Once active and auto-"
+"update is enabled, you will barely see any of those nasty spammers any more."
+msgstr ""
+"Dieses Plugin benötigt keine weitere Konfiguration. Sobald es mit "
+"automatischer Aktualisierung aktiviert wurde, verschwinden die Einträge "
+"automatisch über Zeit."
+
+#: ../admin/_sidebar.php:11
+msgid ""
+"If you think you found a bug in <b>Block Referer Spam</b>, please contact me "
+"and I should be able to fix it within 48 hours."
+msgstr ""
+"Sollten Sie einen Fehler in <b>Block Referer Spam</b> gefunden haben, "
+"kontaktieren Sie mich bitte und ich versuche den Fehler innerhalb von 48 "
+"Stunden zu beheben."
+
+#: ../admin/_sidebar.php:16
+msgid ""
+"In case you really like my plugin, feel free to buy me a coffee &#x2615; or "
+"beer &#x1F37A;"
+msgstr ""
+"Gerne können Sie mir für dieses Plugin einen Kaffee &#x2615; oder ein Bier "
+"&#x1F37A; kaufen."
+
+#: ../admin/_sidebar.php:23
+msgid ""
+"You can also make my day by submitting a positive review on <b><a "
+"href=\"https://wordpress.org/support/view/plugin-reviews/block-referer-spam\" "
+"target=\"_blank\">WordPress.org</a>!</b>"
+msgstr ""
+"Sie können sich auch mit einer positiven Bewertung auf <b><a href=\"https:"
+"//wordpress.org/support/view/plugin-reviews/block-referer-spam\" "
+"target=\"_blank\">WordPress.org</a></b> bedanken!"
+
+#: ../admin/_sidebar.php:29
+msgid "About the Author"
+msgstr "Über den Autor"
+
+#: ../admin/_sidebar.php:32
+msgid ""
+"My name is Robin and I am a <b>Web Developer</b>, <b>UI/UX Designer</b> and "
+"<b>IT Consultant.</b>"
+msgstr ""
+"Mein Name ist Robin und ich bin ein <b><nobr>Web Entwickler</nobr></b>, "
+"<b>UI/UX Designer</b> und <b><nobr>IT Berater</nobr></b>."
+
+#: ../admin/_sidebar.php:34
+msgid ""
+"I am regularly available for interesting freelance projects. If you ever "
+"need my help, do not hesitate to get in touch."
+msgstr ""
+"Ich bin regelmäßig für interessante Projekte als Freiberufler verfügbar. "
+"Sollten Sie meine professionelle Hilfe benötigen, kontaktieren Sie mich!"
+
+#: ../admin/_sidebar.php:36
+msgid ""
+"<b>Email:</b> <a href=\"mailto:hello@codestic.com\">hello@codestic."
+"com</a><br><b>Website:</b> <a href=\"http://codestic.com\" "
+"target=\"_blank\">codestic.com</a>"
+msgstr ""
+"<b>E-Mail:</b> <a href=\"mailto:hello@codestic.com\">hello@codestic."
+"com</a><br><b>Webseite:</b> <a href=\"http://codestic.com\" "
+"target=\"_blank\">codestic.com</a>"
+
+#: ../admin/blocked-list.php:12
+msgid ""
+"Below you will find all internal and custom blocks, in two lists "
+"respectively. You can\n"
+"                                open them safely, as your sites referer will "
+"be hidden through a free tunnel-website\n"
+"                                (<a href=\"https://href.li/\" "
+"target=\"_blank\">href.li</a>)."
+msgstr ""
+"Unten finden Sie alle Internen und eigenen Einträge in zwei Listen. Sie "
+"können diese sicher öffnen, da der Referer Ihrer eigenen Seite durch einen "
+"Tunnel-Service geschützt wird (<a href=\"https://href.li/\" "
+"target=\"_blank\">href.li</a>)."
+
+#: ../admin/blocked-list.php:16
+msgid "Internal Blocks"
+msgstr "Eigene Einträge"
+
+#: ../admin/blocked-list.php:25 ../admin/blocked-list.php:45
+msgid "Open"
+msgstr "Öffnen"
+
+#: ../admin/blocked-list.php:32 ../admin/blocked-list.php:52
+msgid "None"
+msgstr "Keine"
+
+#: ../admin/blocked-list.php:36 ../admin/dashboard.php:145
+msgid "Custom Blocks"
+msgstr "Eigene Blockierungen"
+
+#: ../admin/dashboard.php:7
+msgid "List updated."
+msgstr "Liste aktualisiert."
+
+#: ../admin/dashboard.php:12
+msgid "List failed to update."
+msgstr "Aktualisierung der Liste fehlgeschlagen."
+
+#: ../admin/dashboard.php:20
+msgid ""
+"Your .htaccess is not writable. The \"Rewrite Block\" option will most likely "
+"not work!"
+msgstr ""
+"Ihre .htaccess-Datei ist nicht beschreibbar. Die \"Rewrite Blockierung\" wird "
+"höchstwahrscheinlich nicht funktionieren!"
+
+#: ../admin/dashboard.php:45
+msgid "Auto Update"
+msgstr "Automatische Aktualisierung"
+
+#: ../admin/dashboard.php:52
+msgid "Yes, once daily"
+msgstr "Ja, einmal täglich"
+
+#: ../admin/dashboard.php:60
+msgid "No, only manual"
+msgstr "Nein, nur manuell"
+
+#: ../admin/dashboard.php:68
+msgid "Block Mode"
+msgstr "Block-Modus"
+
+#: ../admin/dashboard.php:76 ../admin/dashboard.php:80
+msgid "Rewrite Block"
+msgstr "Rewrite Blockierung"
+
+#: ../admin/dashboard.php:81
+msgid "(Server software not supported)"
+msgstr "(Server Software nicht unterstützt)"
+
+#: ../admin/dashboard.php:91
+msgid "WordPress Block"
+msgstr "WordPress Blockierung"
+
+#: ../admin/dashboard.php:96
+msgid ""
+"Rewrite Block is faster and occurs on the web-server level. If you run into "
+"problems (e.g. you cannot write your .htaccess file), use the WordPress "
+"Block instead."
+msgstr ""
+"Eine Blockierung durch Rewrite ist schneller und passiert bereits auf Web-"
+"Server Ebene. Sollten Sie jedoch Probleme haben (bspw. mit dem Schreiben der "
+".htaccess-Datei), dann nutzen Sie bitte die WordPress Blockierung."
+
+#: ../admin/dashboard.php:102
+msgid "Manual Update"
+msgstr "Manuelle Aktualisierung"
+
+#: ../admin/dashboard.php:105
+msgid "Download Updates"
+msgstr "Updates Herunterladen"
+
+#: ../admin/dashboard.php:108
+msgid "Clicking this button will force an update of the referer spam list."
+msgstr ""
+"Das bestätigen dieser Schaltfläche löst eine Aktualisierung der Spam Liste "
+"aus."
+
+#: ../admin/dashboard.php:114
+msgid "Last Update"
+msgstr "Letzte Aktualisierung"
+
+#: ../admin/dashboard.php:131
+#, php-format
+msgid "%s Sites Blocked"
+msgstr "%s Seiten Blockiert"
+
+#: ../admin/dashboard.php:132
+msgid "See List"
+msgstr "Liste"
+
+#: ../admin/dashboard.php:135
+msgid "Never"
+msgstr "Niemals"
+
+#: ../admin/dashboard.php:152
+msgid ""
+"If you find that the spammer list does not catch all sites you want to block,"
+" feel free to add more. Custom blocks may be reported back anonymously to "
+"our servers to improve the list."
+msgstr ""
+"Sollten Sie immer noch Besucher von Spam Seiten feststellen, so können Sie "
+"hier eigene Einträge hinzufügen. Einträge können unter Umständen anonym mit "
+"unseren Servern geteilt werden, um die Liste für alle Nutzer zu verbessern."
+
+#: ../lib/RefSpamBlocker.php:99
+msgid "Referer Spam"
+msgstr "Referrer Spam"
+
+#: ../lib/RefSpamBlocker.php:109
+msgid "All Blocked Sites"
+msgstr "Alle geblockten Seiten"
+
+#: ../lib/RefSpamBlocker.php:335
+msgid ""
+"At least one of your custom blocks was ignored because it is already covered "
+"by the internal blocks.<br><span style=\"font-weight: normal\">If you think "
+"that this was a mistake, please <em>get in touch!</em></span>"
+msgstr ""
+"At least one of your custom blocks was ignored because it is already covered "
+"by the internal blocks.<br><span style=\"font-weight: normal\">If you think "
+"that this was a mistake, please <em>get in touch!</em></span>"
+
+#: ../lib/RefSpamBlocker.php:342
+msgid ""
+"At least one of your custom blocks was not valid and was removed.<br><span "
+"style=\"font-weight: normal\">Please enter only valid URLs or hostnames (e.g. "
+"<span class=\"monospace\">http://wwww.some-dodgy-site.com</span> or <span "
+"class=\"monospace\">some-dodgy-site.com</span>). If you think that this was a "
+"mistake, please <em>get in touch!</em></span>"
+msgstr ""
+"Mindestens einer Ihrer eigenen Einträge war ungültig und wurde entfernt."
+"<br><span style=\"font-weight: normal\">Bitte nutzen Sie ausschließlich URL-"
+"Adresse und Host-Namen (z.B. <span class=\"monospace\">http://wwww.sehr-"
+"komische-seite.de</span> oder <span class=\"monospace\">sehr-komische-seite."
+"de</span>). Falls Sie denken dies wäre ein Fehler, <em>kontaktieren Sie mich "
+"bitte!</em></span>"

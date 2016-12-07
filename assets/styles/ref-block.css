@@ -1,0 +1,30 @@
+/**
+* Block Referer Spam Admin CSS
+*/
+
+.monospace {
+    background: #F1F1F1;
+    font-family: monospace;
+    padding: 0 4px;
+    border: 1px solid #DEDEDE;
+    white-space: nowrap;
+}
+
+.ref-block-donate-form {
+    text-align: center;
+    margin-top: 5px;
+}
+
+.ref-block-hint {
+    display: block;
+    font-weight: normal;
+    color: #666666;
+    font-size: 12px;
+    margin-top: 4px;
+    line-height: 22px;
+}
+
+.ref-block-list {
+    margin-left: 40px;
+    list-style-type: decimal;
+}
