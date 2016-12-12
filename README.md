@@ -52,6 +52,7 @@ Anything else, please get in touch!
 
 support / supersoju.com
 
+Cover photo by [Lukas Budimaier](https://unsplash.com/@lukasbudimaier)
 
 == Screenshots ==
 
