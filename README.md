@@ -90,7 +90,7 @@ This can by caused by three reasons.
 
 = I found a bug! =
 
-f you find a bug, please report it here. We will always aim to fix the issue within 48 hours.
+If you find a bug, please report it here. We will always aim to fix the issue within 48 hours.
 
 == Changelog ==
 
