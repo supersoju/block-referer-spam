@@ -113,8 +113,20 @@ class RefSpamBlocker {
             'Blocked Sites',
             __('All Blocked Sites', 'ref-spam-blocker'),
             'manage_options',
-            'ref-spam-list/', array(&$this, 'adminBlockedList')
+            'ref-spam-list/',
+            array(&$this, 'adminBlockedList')
         );
+
+        /*
+        add_submenu_page(
+            'ref-spam-block',
+            'Pro',
+            'Pro',
+            'manage_options',
+            'pro-options/',
+            array(&$this, 'adminProOptions')
+        );
+         */
 
         add_action("load-{$hook}", array(&$this, 'updateSettings'));
         add_action('admin_print_styles-' . $hook, array(&$this, 'pluginLoad'));
@@ -128,6 +140,8 @@ class RefSpamBlocker {
         register_setting('ref-spam-block-settings', 'ref-spam-auto-update');
         register_setting('ref-spam-block-settings', 'ref-spam-custom-blocks');
         register_setting('ref-spam-block-settings', 'ref-spam-block-mode');
+        register_setting('ref-spam-block-settings', 'ref-spam-pro-key');
+        register_setting('ref-spam-block-settings', 'ref-spam-pro-active');
     }
 
     /**
@@ -163,6 +177,11 @@ class RefSpamBlocker {
             } else {
                 // reset htaccess
                 $this->resetHtaccess();
+            }
+
+            $pro_key = get_option('ref-spam-pro-key');
+            if($pro_key){
+                $this->verifyProKey();
             }
         }
     }
@@ -231,6 +250,60 @@ class RefSpamBlocker {
     }
 
     /**
+     * verifyProKey()
+     * @return bool
+     */
+    private function verifyProKey() {
+
+        $pro_key = get_option('ref-spam-pro-key');
+        $pro_key_active = get_option('ref-spam-pro-active');
+
+        if($pro_key_active == 'active'){
+
+        } else {
+
+            $api_params = array(
+                'slm_action' => 'slm_activate',
+                'secret_key' => REFSPAMBLOCKER_KEY,
+                'license_key' => $pro_key,
+                'registered_domain' => $_SERVER['SERVER_NAME']
+            );
+
+            $query = esc_url_raw(add_query_arg($api_params, 'https://www.blockreferspam.com/pro'));
+            $response = wp_remote_get($query, array('timeout' => 20, 'sslverify' => false));
+            if (is_wp_error($response)){
+                $message = "Unexpected Error! The query returned with an error.";
+                $_SESSION['ref-spam-block-proflash-status'] = 'error';
+            };
+            //var_dump($response);//uncomment it if you want to look at the full response
+
+            // License data.
+            $license_data = json_decode(wp_remote_retrieve_body($response));
+
+            // TODO - Do something with it.
+            //var_dump($license_data);//uncomment it to look at the data
+
+            if($license_data->result == 'success'){
+                //Uncomment the followng line to see the message that returned from the license server
+                //echo '<br />The following message was returned from the server: '.$license_data->message;
+                $message = "Pro Version Activated";
+                $_SESSION['ref-spam-block-proflash-status'] = 'success';
+                update_option('ref-spam-pro-active', 'active');
+            } else {
+                //Show error to the user. Probably entered incorrect license key.
+
+                //Uncomment the followng line to see the message that returned from the license server
+                $message .= 'The following message was returned from the server: ' . $license_data->message;
+                $_SESSION['ref-spam-block-proflash-status'] = 'error';
+                //update_option('ref-spam-pro-active', false);
+            };
+
+            $_SESSION['ref-spam-block-proflash'] = $message;
+        };
+        return true;
+    }
+
+    /**
      * pageLoad()
      * Function responsible for blocking in "WordPress" mode.
      *
@@ -275,16 +348,29 @@ class RefSpamBlocker {
         $customBlocks = json_encode(array_filter(preg_split('/[\n\r]+/', get_option('ref-spam-custom-blocks'))));
 
         // create context to send custom blocks back home
+        $pro_key_active = get_option('ref-spam-pro-active');
+        if($pro_key_active == 'active'){
+            $header_array = array(
+                'Content-type: application/json',
+                'X-Client-Version: ' . REFSPAMBLOCKER_VERSION,
+                'X-URL-Hash: ' . md5(get_site_url()),
+                'X-Check-Domain: ' . $_SERVER['SERVER_NAME'],
+                'X-Lic-Key: ' . get_option('ref-spam-pro-key'),
+                'X-User-Agent: Block Referer Spam v' . REFSPAMBLOCKER_VERSION
+            );
+        } else {
+            $header_array = array(
+                'Content-type: application/json',
+                'X-Client-Version: ' . REFSPAMBLOCKER_VERSION,
+                'X-URL-Hash: ' . md5(get_site_url()),
+                'X-User-Agent: Block Referer Spam v' . REFSPAMBLOCKER_VERSION
+            );
+        };
         $opts = array(
             'http' =>
                 array(
                     'method'  => 'PUT',
-                    'header'  => array(
-                        'Content-type: application/json',
-                        'X-Client-Version: ' . REFSPAMBLOCKER_VERSION,
-                        'X-URL-Hash: ' . md5(get_site_url()),
-                        'X-User-Agent: Block Referer Spam v' . REFSPAMBLOCKER_VERSION
-                    ),
+                    'header'  => $header_array,
                     'content' => $customBlocks,
                     'timeout' => 30
                 )
@@ -309,8 +395,16 @@ class RefSpamBlocker {
             $formatted_list .= $item . "\n";
         };
 
+        $custom_list = "";
+        if($list_obj->custom_blocks){
+            foreach($list_obj->custom_blocks as $item){
+                $custom_list .= $item . "\n";
+            };
+        };
+
         // save list
         update_option('ref-blocker-list', $formatted_list);
+        update_option('ref-spam-custom-blocks', $custom_list);
 
         // save last updated stamp
         update_option('ref-blocker-updated', time());
@@ -427,6 +521,13 @@ class RefSpamBlocker {
      */
     public function adminBlockedList() {
         include(dirname(__FILE__) . '/../admin/blocked-list.php');
+    }
+
+    /**
+     * adminProOptions()
+     */
+    public function adminProOptions() {
+        include(dirname(__FILE__) . '/../admin/pro-options.php');
     }
 
     /**

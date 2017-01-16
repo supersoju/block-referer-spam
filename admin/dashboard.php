@@ -14,6 +14,19 @@
         <?php endif; ?>
     <?php endif; ?>
 
+    <?php if (isset($_SESSION['ref-spam-block-proflash'])) { ?>
+        <?php
+        $message_class = "error";
+        if($_SESSION['ref-spam-block-proflash-status'] == 'success'){
+            $message_class = "updated";
+        };
+        ?>
+
+        <div id="message" class="<?php echo $message_class; ?>">
+            <p><strong><?php echo $_SESSION['ref-spam-block-proflash']; ?> / <?php echo $_SESSION['ref-spam-block-proflash-status']; ?></strong></p>
+        </div>
+    <?php }; ?>
+
     <?php if (get_option('ref-spam-block-mode', 'rewrite') == 'rewrite' && (!is_writable(get_home_path() . '.htaccess'))) : ?>
         <div id="message" class="error">
             <p>
@@ -40,6 +53,20 @@
                                     <tbody>
 
                                     <!-- SETTINGS -->
+                                    <tr>
+                                        <th>
+                                            <label
+                                                for="ref-spam-pro-key"><?php _e('Pro License Key', 'ref-spam-blocker'); ?></label>
+                                        </th>
+                                        <td>
+                                            <input type="text" name="ref-spam-pro-key" id="ref-spam-pro-key" value="<?php echo esc_attr(get_option('ref-spam-pro-key')); ?>" size="64" />
+                                            <input type="hidden" name="ref-spam-pro-active" value="<?php echo esc_attr(get_option('ref-spam-pro-active')); ?>" />
+
+                                            <p class="description">
+                                            Pro version will allow you to sync your custom blocks across all of your registered sites. Get your key at <a href="https://blockreferspam.com/pro" target="_blank">BlockReferSpam.com</a> <?php echo get_option('ref-spam-pro-active'); ?>.
+                                            </p>
+                                        </td>
+                                    </tr>
                                     <tr>
                                         <th>
                                             <label><?php _e('Auto Update', 'ref-spam-blocker'); ?></label>
