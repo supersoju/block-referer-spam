@@ -23,7 +23,7 @@
         ?>
 
         <div id="message" class="<?php echo $message_class; ?>">
-            <p><strong><?php echo $_SESSION['ref-spam-block-proflash']; ?> / <?php echo $_SESSION['ref-spam-block-proflash-status']; ?></strong></p>
+            <p><strong><?php echo $_SESSION['ref-spam-block-proflash']; ?></strong></p>
         </div>
     <?php }; ?>
 
