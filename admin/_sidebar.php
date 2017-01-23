@@ -8,19 +8,15 @@
 
         <p><?php _e('This plugin does not need any further configuration. Once active and auto-update is enabled, you will barely see any of those nasty spammers any more.', 'ref-spam-blocker'); ?></p>
 
-        <p><?php _e('If you think you found a bug in <b>Block Referer Spam</b>, please contact me and I should be able to fix it within 48 hours.', 'ref-spam-blocker'); ?></p>
+        <p><?php _e('If you think you found a bug in <b>Block Referer Spam</b>, please contact us.', 'ref-spam-blocker'); ?></p>
 
         <hr>
 
-        <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_blank" class="ref-block-donate-form">
-            <p><?php _e('In case you really like my plugin, feel free to buy me a coffee &#x2615; or beer &#x1F37A;', 'ref-spam-blocker'); ?></p>
+        <h3>Block Refer Spam Pro</h3>
 
-            <input type="hidden" name="cmd" value="_s-xclick">
-            <input type="hidden" name="hosted_button_id" value="P24D3Z3E526BQ">
-            <input type="image" src="https://www.paypalobjects.com/en_US/i/btn/btn_buynowCC_LG.gif" border="0" name="submit" alt="PayPal - The safer, easier way to pay online!">
-            <img alt="" border="0" src="https://www.paypalobjects.com/en_US/i/scr/pixel.gif" width="1" height="1">
+        <p><strong>Need to sync your custom block lists across all of your sites? Want access to more curated block lists?</strong></p>
 
-            <p><?php _e('You can also make my day by submitting a positive review on <b><a href="https://wordpress.org/support/view/plugin-reviews/block-referer-spam" target="_blank">WordPress.org</a>!</b>', 'ref-spam-blocker'); ?></p>
-        </form>
+        <p><a href="https://www.blockreferspam.com/pro/" target="_blank">Upgrade to Block Refer Spam Pro</a>, starting at only $2/mo</p>
     </div>
 </div>
+
