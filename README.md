@@ -2,8 +2,8 @@
 Contributors: supersoju, codestic
 Tags: spam, referer, semalt, buttons-for-website, floating-share-buttons, 4webmaster, ilovevitaly, referal, referral, analytics, analytics spam, referer spam, referrer spam, referal spam, referral spam, anti referer, anti referrer, anti referral, block analytics, anti-spam, spambot, spam-bot, spam bot, bot block, google spam, seo spam, referer attack, referral attack, referer blockieren, referrer blockieren, spam blockieren, bot filter, spam attack
 Requires at least: 3.0.2
-Tested up to: 4.7.1
-Stable tag: 1.1.9
+Tested up to: 4.7.2
+Stable tag: 1.1.9.1
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -98,6 +98,9 @@ This can by caused by three reasons.
 If you find a bug, please report it here. We will always aim to fix the issue within 48 hours.
 
 == Changelog ==
+
+= 1.1.9.1 =
+* Cleans up after itself on deactivation
 
 = 1.1.9 =
 * Pro version available

@@ -39,6 +39,8 @@ class RefSpamBlocker {
 
         // register activation
         register_activation_hook($pluginFile, array(&$this, 'activate'));
+        // register deactivation
+        register_deactivation_hook($pluginFile, array(&$this, 'deactivate'));
 
         // add actions
         add_action('plugins_loaded', array(&$this, 'init'));
@@ -61,6 +63,13 @@ class RefSpamBlocker {
 
         // schedule daily update
         wp_schedule_event(time(), 'daily', 'dailyCronjob');
+    }
+
+    /**
+     * deactivate()
+     */
+    public function deactivate() {
+        $this->resetHtaccess();
     }
 
     /**
