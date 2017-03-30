@@ -284,13 +284,9 @@ class RefSpamBlocker {
                 $message = "Unexpected Error! The query returned with an error.";
                 $_SESSION['ref-spam-block-proflash-status'] = 'error';
             };
-            //var_dump($response);//uncomment it if you want to look at the full response
 
             // License data.
             $license_data = json_decode(wp_remote_retrieve_body($response));
-
-            // TODO - Do something with it.
-            //var_dump($license_data);//uncomment it to look at the data
 
             if($license_data->result == 'success'){
                 //Uncomment the followng line to see the message that returned from the license server
@@ -300,8 +296,6 @@ class RefSpamBlocker {
                 update_option('ref-spam-pro-active', 'active');
             } else {
                 //Show error to the user. Probably entered incorrect license key.
-
-                //Uncomment the followng line to see the message that returned from the license server
                 $message .= 'The following message was returned from the server: ' . $license_data->message;
                 $_SESSION['ref-spam-block-proflash-status'] = 'error';
                 //update_option('ref-spam-pro-active', false);
@@ -404,16 +398,17 @@ class RefSpamBlocker {
             $formatted_list .= $item . "\n";
         };
 
-        $custom_list = "";
         if($list_obj->custom_blocks){
+            $custom_list = "";
             foreach($list_obj->custom_blocks as $item){
                 $custom_list .= $item . "\n";
             };
+            // save custom list
+            update_option('ref-spam-custom-blocks', $custom_list);
         };
 
         // save list
         update_option('ref-blocker-list', $formatted_list);
-        update_option('ref-spam-custom-blocks', $custom_list);
 
         // save last updated stamp
         update_option('ref-blocker-updated', time());
