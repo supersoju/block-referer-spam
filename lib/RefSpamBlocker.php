@@ -2,6 +2,8 @@
 
 namespace WPBlockRefererSpam;
 
+require_once(__DIR__ . '/../../../../wp-admin/includes/misc.php');
+
 /**
  * RefSpamBlocker
  *
