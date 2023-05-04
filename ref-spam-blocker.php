@@ -6,8 +6,8 @@ namespace WPBlockRefererSpam;
 Plugin Name: Block Referer Spam
 Plugin URI: https://wordpress.org/plugins/block-referer-spam/
 Description: Prevents referer spam from accessing your site and cleans up your Google Analytics in the process.
-Author: supersoju, codestic
-Version: 1.1.9.4
+Author: supersoju
+Version: 1.1.9.5
 Author URI: http://supersoju.com
 Text Domain: ref-spam-blocker
 Domain Path: /languages
