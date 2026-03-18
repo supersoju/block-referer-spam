@@ -162,6 +162,7 @@ class RefSpamBlocker {
 
         // download
         if (isset($_GET['download']) && $_GET['download'] == 'true') {
+            check_admin_referer('ref-spam-download');
             if ($this->downloadList()) {
                 //add_settings_error('list-updated', 'list-updated', 'UPDATED', 'updated');
                 $_SESSION['ref-spam-block-flash'] = 'list-updated';
@@ -281,7 +282,7 @@ class RefSpamBlocker {
             );
 
             $query = esc_url_raw(add_query_arg($api_params, 'https://www.blockreferspam.com/pro'));
-            $response = wp_remote_get($query, array('timeout' => 20, 'sslverify' => false));
+            $response = wp_remote_get($query, array('timeout' => 20));
             if (is_wp_error($response)){
                 $message = "Unexpected Error! The query returned with an error.";
                 $_SESSION['ref-spam-block-proflash-status'] = 'error';

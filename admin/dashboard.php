@@ -128,7 +128,7 @@
                                     <tr>
                                         <th><label><?php _e('Manual Update', 'ref-spam-blocker'); ?></label></th>
                                         <td>
-                                            <a href="admin.php?page=ref-spam-block&download=true"
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=ref-spam-block&download=true'), 'ref-spam-download')); ?>"
                                                class="button button-secondary"><?php _e('Download Updates', 'ref-spam-blocker'); ?></a>
 
                                             <p class="description">
