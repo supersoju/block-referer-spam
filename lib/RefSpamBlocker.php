@@ -72,6 +72,7 @@ class RefSpamBlocker {
      */
     public function deactivate() {
         $this->resetHtaccess();
+        wp_clear_scheduled_hook('dailyCronjob');
     }
 
     /**
@@ -320,7 +321,7 @@ class RefSpamBlocker {
             return false;
         };
 
-        if(!$_SERVER['HTTP_REFERER']){
+        if(empty($_SERVER['HTTP_REFERER'])){
             return true;
         };
 
@@ -541,6 +542,11 @@ class RefSpamBlocker {
      * Executed daily to update list and htaccess file
      */
     public function dailyCronjob() {
+        // respect the auto-update setting
+        if (get_option('ref-spam-auto-update', 'yes') !== 'yes') {
+            return;
+        }
+
         // download list
         $this->downloadList();
 
