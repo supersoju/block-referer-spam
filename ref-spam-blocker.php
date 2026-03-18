@@ -15,7 +15,7 @@ Domain Path: /languages
 
 if (defined('ABSPATH') && !class_exists('RefSpamBlocker')) {
     if (!defined('REFSPAMBLOCKER_VERSION')) {
-        define('REFSPAMBLOCKER_VERSION', '1.1.9.3');
+        define('REFSPAMBLOCKER_VERSION', '1.1.9.5');
     }
 
     if (!defined('REFSPAMBLOCKER_TEXTDOMAIN')) {
