@@ -163,13 +163,11 @@ class RefSpamBlocker {
         // download
         if (isset($_GET['download']) && $_GET['download'] == 'true') {
             if ($this->downloadList()) {
-                //add_settings_error('list-updated', 'list-updated', 'UPDATED', 'updated');
-                $_SESSION['ref-spam-block-flash'] = 'list-updated';
+                set_transient('ref_spam_flash_' . get_current_user_id(), 'list-updated', 60);
                 header('Location: admin.php?page=ref-spam-block');
 
             } else {
-                //add_settings_error('list-updated', 'list-updated', 'UPDATED', 'error');
-                $_SESSION['ref-spam-block-flash'] = 'list-not-updated';
+                set_transient('ref_spam_flash_' . get_current_user_id(), 'list-not-updated', 60);
                 header('Location: admin.php?page=ref-spam-block&downloaded=false');
             }
             exit;
@@ -269,42 +267,44 @@ class RefSpamBlocker {
         $pro_key = get_option('ref-spam-pro-key');
         $pro_key_active = get_option('ref-spam-pro-active');
 
-        if($pro_key_active == 'active'){
+        if ($pro_key_active == 'active') {
+            return true;
+        }
 
+        $api_params = array(
+            'slm_action' => 'slm_activate',
+            'secret_key' => REFSPAMBLOCKER_KEY,
+            'license_key' => $pro_key,
+            'registered_domain' => $_SERVER['SERVER_NAME']
+        );
+
+        $query = esc_url_raw(add_query_arg($api_params, 'https://www.blockreferspam.com/pro'));
+        $response = wp_remote_get($query, array('timeout' => 20, 'sslverify' => false));
+
+        if (is_wp_error($response)) {
+            set_transient('ref_spam_proflash_' . get_current_user_id(), array(
+                'status'  => 'error',
+                'message' => 'Unexpected Error! The query returned with an error.',
+            ), 60);
+            return false;
+        }
+
+        // License data.
+        $license_data = json_decode(wp_remote_retrieve_body($response));
+
+        if ($license_data->result == 'success') {
+            update_option('ref-spam-pro-active', 'active');
+            set_transient('ref_spam_proflash_' . get_current_user_id(), array(
+                'status'  => 'success',
+                'message' => 'Pro Version Activated',
+            ), 60);
         } else {
+            set_transient('ref_spam_proflash_' . get_current_user_id(), array(
+                'status'  => 'error',
+                'message' => 'The following message was returned from the server: ' . $license_data->message,
+            ), 60);
+        }
 
-            $api_params = array(
-                'slm_action' => 'slm_activate',
-                'secret_key' => REFSPAMBLOCKER_KEY,
-                'license_key' => $pro_key,
-                'registered_domain' => $_SERVER['SERVER_NAME']
-            );
-
-            $query = esc_url_raw(add_query_arg($api_params, 'https://www.blockreferspam.com/pro'));
-            $response = wp_remote_get($query, array('timeout' => 20, 'sslverify' => false));
-            if (is_wp_error($response)){
-                $message = "Unexpected Error! The query returned with an error.";
-                $_SESSION['ref-spam-block-proflash-status'] = 'error';
-            };
-
-            // License data.
-            $license_data = json_decode(wp_remote_retrieve_body($response));
-
-            if($license_data->result == 'success'){
-                //Uncomment the followng line to see the message that returned from the license server
-                //echo '<br />The following message was returned from the server: '.$license_data->message;
-                $message = "Pro Version Activated";
-                $_SESSION['ref-spam-block-proflash-status'] = 'success';
-                update_option('ref-spam-pro-active', 'active');
-            } else {
-                //Show error to the user. Probably entered incorrect license key.
-                $message .= 'The following message was returned from the server: ' . $license_data->message;
-                $_SESSION['ref-spam-block-proflash-status'] = 'error';
-                //update_option('ref-spam-pro-active', false);
-            };
-
-            $_SESSION['ref-spam-block-proflash'] = $message;
-        };
         return true;
     }
 
@@ -551,9 +551,10 @@ class RefSpamBlocker {
     }
 
     /**
-     * Destroy session data when logging out
+     * Clear flash transients on logout
      */
     public function logout() {
-        //session_destroy();
+        delete_transient('ref_spam_flash_' . get_current_user_id());
+        delete_transient('ref_spam_proflash_' . get_current_user_id());
     }
 }

@@ -1,31 +1,32 @@
 <div class="wrap">
     <h2><?php _e('Block Referer Spam', 'ref-spam-blocker'); ?></h2>
 
-    <?php if (isset($_SESSION['ref-spam-block-flash'])) : ?>
-        <?php if ($_SESSION['ref-spam-block-flash'] == 'list-updated') : ?>
-            <div id="message" class="updated">
-                <p><strong><?php _e('List updated.', 'ref-spam-blocker') ?></strong></p>
-            </div>
-
-        <?php elseif ($_SESSION['ref-spam-block-flash'] == 'list-not-updated') : ?>
-            <div id="message" class="error">
-                <p><strong><?php _e('List failed to update.', 'ref-spam-blocker') ?></strong></p>
-            </div>
-        <?php endif; ?>
+    <?php
+    $flash = get_transient('ref_spam_flash_' . get_current_user_id());
+    if ($flash) {
+        delete_transient('ref_spam_flash_' . get_current_user_id());
+    }
+    ?>
+    <?php if ($flash === 'list-updated') : ?>
+        <div id="message" class="updated">
+            <p><strong><?php _e('List updated.', 'ref-spam-blocker') ?></strong></p>
+        </div>
+    <?php elseif ($flash === 'list-not-updated') : ?>
+        <div id="message" class="error">
+            <p><strong><?php _e('List failed to update.', 'ref-spam-blocker') ?></strong></p>
+        </div>
     <?php endif; ?>
 
-    <?php if (isset($_SESSION['ref-spam-block-proflash'])) { ?>
-        <?php
-        $message_class = "error";
-        if($_SESSION['ref-spam-block-proflash-status'] == 'success'){
-            $message_class = "updated";
-        };
-        ?>
-
-        <div id="message" class="<?php echo $message_class; ?>">
-            <p><strong><?php echo $_SESSION['ref-spam-block-proflash']; ?></strong></p>
+    <?php
+    $proflash = get_transient('ref_spam_proflash_' . get_current_user_id());
+    if ($proflash) {
+        delete_transient('ref_spam_proflash_' . get_current_user_id());
+        $message_class = ($proflash['status'] === 'success') ? 'updated' : 'error';
+    ?>
+        <div id="message" class="<?php echo esc_attr($message_class); ?>">
+            <p><strong><?php echo esc_html($proflash['message']); ?></strong></p>
         </div>
-    <?php }; ?>
+    <?php } ?>
 
     <?php if (get_option('ref-spam-block-mode', 'rewrite') == 'rewrite' && (!is_writable(get_home_path() . '.htaccess'))) : ?>
         <div id="message" class="error">
@@ -203,4 +204,3 @@
     </div>
 </div>
 
-<?php unset($_SESSION['ref-spam-block-flash']); ?>
