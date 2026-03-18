@@ -81,6 +81,7 @@ class RefSpamBlocker {
         // init
         add_action('admin_init', array(&$this, 'adminInit'));
         add_action('admin_menu', array(&$this, 'createMenu'));
+        add_action('admin_notices', array(&$this, 'cachingPluginNotice'));
 
         /*
         if (!session_id()) {
@@ -95,6 +96,68 @@ class RefSpamBlocker {
      */
     public function adminInit() {
         wp_register_style('ref-block-styles', plugins_url('../assets/styles/ref-block.css', __FILE__));
+    }
+
+    /**
+     * cachingPluginNotice()
+     * Shows a warning on the plugin's own admin pages when WordPress block mode
+     * is active and a full-page caching plugin is detected, since cached pages
+     * are served before the wp hook fires.
+     */
+    public function cachingPluginNotice() {
+        // Only show on this plugin's pages
+        $page = isset($_GET['page']) ? $_GET['page'] : '';
+        if (strpos($page, 'ref-spam') === false) {
+            return;
+        }
+
+        if (get_option('ref-spam-block-mode', 'rewrite') !== 'wordpress') {
+            return;
+        }
+
+        $detected = $this->detectActiveCachingPlugin();
+        if (!$detected) {
+            return;
+        }
+
+        echo '<div class="notice notice-warning">'
+            . '<p><strong>' . esc_html__('Block Referer Spam — Caching Plugin Conflict', 'ref-spam-blocker') . '</strong></p>'
+            . '<p>' . sprintf(
+                esc_html__('%s is active. Full-page caching serves pages before WordPress runs, so WordPress Block mode cannot intercept those requests. Switch to Rewrite Block mode (Apache only) to block referer spam reliably when caching is enabled.', 'ref-spam-blocker'),
+                '<strong>' . esc_html($detected) . '</strong>'
+            ) . '</p>'
+            . '</div>';
+    }
+
+    /**
+     * detectActiveCachingPlugin()
+     * Returns the display name of the first detected active caching plugin, or false.
+     */
+    private function detectActiveCachingPlugin() {
+        $plugins = array(
+            'wp-rocket/wp-rocket.php'                       => 'WP Rocket',
+            'w3-total-cache/w3-total-cache.php'             => 'W3 Total Cache',
+            'wp-super-cache/wp-cache.php'                   => 'WP Super Cache',
+            'litespeed-cache/litespeed-cache.php'           => 'LiteSpeed Cache',
+            'autoptimize/autoptimize.php'                   => 'Autoptimize',
+            'cache-enabler/cache-enabler.php'               => 'Cache Enabler',
+            'comet-cache/comet-cache.php'                   => 'Comet Cache',
+            'hummingbird-performance/wp-hummingbird.php'    => 'Hummingbird',
+            'sg-cachepress/sg-cachepress.php'               => 'SG Optimizer',
+            'swift-performance-lite/swift-performance-lite.php' => 'Swift Performance',
+        );
+
+        if (!function_exists('is_plugin_active')) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+
+        foreach ($plugins as $file => $name) {
+            if (is_plugin_active($file)) {
+                return $name;
+            }
+        }
+
+        return false;
     }
 
     /**
