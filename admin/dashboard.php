@@ -64,7 +64,7 @@
                                             <input type="hidden" name="ref-spam-pro-active" value="<?php echo esc_attr(get_option('ref-spam-pro-active')); ?>" />
 
                                             <p class="description">
-                                            Pro version will allow you to sync your custom blocks across all of your registered sites. Get your key at <a href="https://blockreferspam.com/pro" target="_blank">BlockReferSpam.com</a> <?php echo get_option('ref-spam-pro-active'); ?>.
+                                            Pro version will allow you to sync your custom blocks across all of your registered sites. Get your key at <a href="https://blockreferspam.com/pro" target="_blank">BlockReferSpam.com</a> <?php echo esc_html(get_option('ref-spam-pro-active')); ?>.
                                             </p>
                                         </td>
                                     </tr>
@@ -98,7 +98,7 @@
                                         <td>
                                             <fieldset>
                                                 <label>
-                                                    <?php if (preg_match('/apache/i', $_SERVER['SERVER_SOFTWARE'])) : ?>
+                                                    <?php if (preg_match('/apache/i', isset($_SERVER['SERVER_SOFTWARE']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])) : '')) : ?>
                                                         <input type="radio" name="ref-spam-block-mode"
                                                                value="rewrite"<?php echo(get_option('ref-spam-block-mode', 'rewrite') == 'rewrite' ? ' checked="checked"' : '') ?>>
                                                         <span><?php _e('Rewrite Block', 'ref-spam-blocker'); ?></span>
@@ -143,7 +143,7 @@
                                         <td>
                                             <p>
                                                 <?php if (get_option('ref-blocker-updated') !== false) : ?>
-                                                    <?php echo date_i18n(get_option('date_format'), get_option('ref-blocker-updated')) . ' ' . date_i18n(get_option('time_format'), get_option('ref-blocker-updated')); ?>
+                                                    <?php echo esc_html(date_i18n(get_option('date_format'), get_option('ref-blocker-updated')) . ' ' . date_i18n(get_option('time_format'), get_option('ref-blocker-updated'))); ?>
 
                                                     <br>
 
@@ -156,8 +156,8 @@
                                                     <?php $list = array_filter(preg_split('/[\n\r]+/', get_option('ref-spam-custom-blocks'))); ?>
 
                                                     <span class="ref-block-hint">
-                                                        <?php echo sprintf(__('%s Sites Blocked', 'ref-spam-blocker'), $count); ?>
-                                                        (<a href="<?php echo admin_url('admin.php?page=ref-spam-list'); ?>"><?php _e('See List', 'ref-spam-blocker'); ?></a>)
+                                                        <?php echo esc_html(sprintf(__('%s Sites Blocked', 'ref-spam-blocker'), $count)); ?>
+                                                        (<a href="<?php echo esc_url(admin_url('admin.php?page=ref-spam-list')); ?>"><?php _e('See List', 'ref-spam-blocker'); ?></a>)
                                                     </span>
                                                 <?php else : ?>
                                                     <?php _e('Never', 'ref-spam-blocker'); ?>

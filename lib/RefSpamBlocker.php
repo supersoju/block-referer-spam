@@ -59,7 +59,8 @@ class RefSpamBlocker {
      */
     public function activate() {
         // if not apache, set block mode default to WordPress block
-        if (!preg_match('/apache/i', $_SERVER['SERVER_SOFTWARE'])) {
+        $serverSoftware = isset($_SERVER['SERVER_SOFTWARE']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])) : '';
+        if (!preg_match('/apache/i', $serverSoftware)) {
             update_option('ref-spam-block-mode', 'wordpress');
         }
 
@@ -107,7 +108,7 @@ class RefSpamBlocker {
      */
     public function cachingPluginNotice() {
         // Only show on this plugin's pages
-        $page = isset($_GET['page']) ? $_GET['page'] : '';
+        $page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
         if (strpos($page, 'ref-spam') === false) {
             return;
         }
@@ -237,7 +238,7 @@ class RefSpamBlocker {
             }
             exit;
 
-        } elseif (isset($_GET['settings-updated']) && $_GET['settings-updated']) {
+        } elseif (isset($_GET['settings-updated']) && sanitize_text_field(wp_unslash($_GET['settings-updated']))) {
             // verify custom blocks
             $this->verifyCustomBlocks();
 
@@ -416,7 +417,7 @@ class RefSpamBlocker {
             'slm_action' => 'slm_activate',
             'secret_key' => REFSPAMBLOCKER_KEY,
             'license_key' => $pro_key,
-            'registered_domain' => $_SERVER['SERVER_NAME']
+            'registered_domain' => isset($_SERVER['SERVER_NAME']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_NAME'])) : ''
         );
 
         $query = esc_url_raw(add_query_arg($api_params, 'https://www.blockreferspam.com/pro'));
@@ -466,7 +467,8 @@ class RefSpamBlocker {
         };
 
         // get domain
-        $domain = str_ireplace('www.', '', parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST));
+        $referer = sanitize_text_field(wp_unslash($_SERVER['HTTP_REFERER']));
+        $domain = str_ireplace('www.', '', wp_parse_url($referer, PHP_URL_HOST));
 
         // get list
         $list = $this->getList();
@@ -475,7 +477,7 @@ class RefSpamBlocker {
             if (strpos($domain, $host) !== false) {
                 header('HTTP/1.0 403 Forbidden');
                 echo 'You are forbidden from accessing this website.<br>' .
-                    'Powered by <a href="' . REFSPAMBLOCKER_PLUGIN_URL . '">Referer Spam Blocker</a>.';
+                    'Powered by <a href="' . esc_url(REFSPAMBLOCKER_PLUGIN_URL) . '">Referer Spam Blocker</a>.';
                 exit;
             };
         };
@@ -502,7 +504,7 @@ class RefSpamBlocker {
             'X-User-Agent'    => 'Block Referer Spam v' . REFSPAMBLOCKER_VERSION,
         );
         if ($pro_key_active == 'active') {
-            $header_array['X-Check-Domain'] = sanitize_text_field(wp_unslash($_SERVER['SERVER_NAME']));
+            $header_array['X-Check-Domain'] = isset($_SERVER['SERVER_NAME']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_NAME'])) : '';
             $header_array['X-Lic-Key']      = get_option('ref-spam-pro-key');
         };
 
@@ -587,12 +589,12 @@ class RefSpamBlocker {
             $hostIdn = $IDN->encode($host);
 
             // add scheme if missing
-            if (!parse_url($hostIdn, PHP_URL_SCHEME)) {
+            if (!wp_parse_url($hostIdn, PHP_URL_SCHEME)) {
                 $hostIdn = "http://{$hostIdn}";
             }
 
             // parse URL/host
-            $hostIdn = parse_url($hostIdn, PHP_URL_HOST);
+            $hostIdn = wp_parse_url($hostIdn, PHP_URL_HOST);
             $host = $IDN->decode($hostIdn);
 
             // quit right here!

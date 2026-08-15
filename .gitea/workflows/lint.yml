@@ -1,0 +1,58 @@
+name: Lint
+
+on:
+  pull_request:
+    branches: [master]
+
+jobs:
+  php-syntax:
+    name: PHP syntax check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+
+      - name: Lint all PHP files
+        run: |
+          set -e
+          find . -name '*.php' -not -path './vendor/*' -print0 \
+            | xargs -0 -n1 php -l
+
+  wpcs:
+    name: WordPress Coding Standards
+    runs-on: ubuntu-latest
+    needs: php-syntax
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: "8.1"
+          coverage: none
+          tools: composer
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/composer
+          key: composer-${{ hashFiles('composer.json') }}
+
+      - name: Install dependencies
+        run: composer install --no-progress --prefer-dist
+
+      - name: Determine changed PHP files
+        id: changed
+        run: |
+          set -e
+          git fetch origin "${{ github.base_ref }}" --depth=1
+          files=$(git diff --name-only --diff-filter=ACMR "origin/${{ github.base_ref }}...HEAD" -- '*.php' | tr '\n' ' ')
+          echo "files=$files" >> "$GITHUB_OUTPUT"
+
+      - name: Run phpcs on changed files (WordPress standard)
+        if: steps.changed.outputs.files != ''
+        run: vendor/bin/phpcs ${{ steps.changed.outputs.files }}
