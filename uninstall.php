@@ -17,6 +17,7 @@ $options = array(
     'ref-spam-pro-active',
     'ref-blocker-list',
     'ref-blocker-updated',
+    'ref-spam-htaccess-backup',
 );
 
 foreach ($options as $option) {

@@ -2,7 +2,7 @@
 
 namespace WPBlockRefererSpam;
 
-require_once(__DIR__ . '/../../../../wp-admin/includes/misc.php');
+require_once ABSPATH . 'wp-admin/includes/misc.php';
 
 /**
  * RefSpamBlocker
@@ -175,8 +175,8 @@ class RefSpamBlocker {
      */
     public function createMenu() {
         $hook = add_menu_page(
-            __('Block Referer Spam'),
-            __('Referer Spam'),
+            __('Block Referer Spam', 'ref-spam-blocker'),
+            __('Referer Spam', 'ref-spam-blocker'),
             'manage_options',
             'ref-spam-block/',
             array(&$this, 'adminDashboard'),
@@ -284,8 +284,9 @@ class RefSpamBlocker {
         $lines[] = '  RewriteRule .* - [F]';
         $lines[] = '</IfModule>';
 
-        // create copy of current .htaccess
-        copy($htaccess, $htaccess . '.bak');
+        // back up current .htaccess contents in an option rather than a
+        // world-readable .bak file left sitting in the webroot
+        update_option('ref-spam-htaccess-backup', file_get_contents($htaccess), false);
 
         // update htaccess
         insert_with_markers($htaccess, 'Referer Spam Blocker', $lines);
