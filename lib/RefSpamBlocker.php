@@ -492,38 +492,32 @@ class RefSpamBlocker {
         // get custom blocks
         $customBlocks = json_encode(array_filter(preg_split('/[\n\r]+/', get_option('ref-spam-custom-blocks'))));
 
-        // create context to send custom blocks back home
+        // create headers to send custom blocks back home
         $pro_key_active = get_option('ref-spam-pro-active');
-        if($pro_key_active == 'active'){
-            $header_array = array(
-                'Content-type: application/json',
-                'X-Client-Version: ' . REFSPAMBLOCKER_VERSION,
-                'X-URL-Hash: ' . md5(get_site_url()),
-                'X-Check-Domain: ' . $_SERVER['SERVER_NAME'],
-                'X-Lic-Key: ' . get_option('ref-spam-pro-key'),
-                'X-User-Agent: Block Referer Spam v' . REFSPAMBLOCKER_VERSION
-            );
-        } else {
-            $header_array = array(
-                'Content-type: application/json',
-                'X-Client-Version: ' . REFSPAMBLOCKER_VERSION,
-                'X-URL-Hash: ' . md5(get_site_url()),
-                'X-User-Agent: Block Referer Spam v' . REFSPAMBLOCKER_VERSION
-            );
-        };
-        $opts = array(
-            'http' =>
-                array(
-                    'method'  => 'PUT',
-                    'header'  => $header_array,
-                    'content' => $customBlocks,
-                    'timeout' => 30
-                )
+        $header_array = array(
+            'Content-type'    => 'application/json',
+            'X-Client-Version' => REFSPAMBLOCKER_VERSION,
+            'X-URL-Hash'      => md5(get_site_url()),
+            'X-User-Agent'    => 'Block Referer Spam v' . REFSPAMBLOCKER_VERSION,
         );
-        $context  = stream_context_create($opts);
+        if ($pro_key_active == 'active') {
+            $header_array['X-Check-Domain'] = sanitize_text_field(wp_unslash($_SERVER['SERVER_NAME']));
+            $header_array['X-Lic-Key']      = get_option('ref-spam-pro-key');
+        };
 
         // download list and send custom blocks home
-        $list = @file_get_contents(REFSPAMBLOCKER_LIST_URL, false, $context);
+        $response = wp_remote_request(REFSPAMBLOCKER_LIST_URL, array(
+            'method'  => 'PUT',
+            'headers' => $header_array,
+            'body'    => $customBlocks,
+            'timeout' => 30,
+        ));
+
+        if (is_wp_error($response)) {
+            return false;
+        };
+
+        $list = wp_remote_retrieve_body($response);
 
         if (!$list) {
             return false;
@@ -531,7 +525,7 @@ class RefSpamBlocker {
 
         $list_obj = json_decode($list);
 
-        if(!$list_obj->list){
+        if (!is_object($list_obj) || empty($list_obj->list)) {
             return false;
         };
 
@@ -540,7 +534,7 @@ class RefSpamBlocker {
             $formatted_list .= $item . "\n";
         };
 
-        if($list_obj->custom_blocks){
+        if(!empty($list_obj->custom_blocks)){
             $custom_list = "";
             foreach($list_obj->custom_blocks as $item){
                 $custom_list .= $item . "\n";
