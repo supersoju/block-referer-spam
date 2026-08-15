@@ -288,6 +288,81 @@ class RefSpamBlocker {
 
         // update htaccess
         insert_with_markers($htaccess, 'Referer Spam Blocker', $lines);
+
+        // ensure our block runs before any caching plugin rules
+        $this->ensureHtaccessOrdering($htaccess);
+    }
+
+    /**
+     * ensureHtaccessOrdering()
+     * Moves the Referer Spam Blocker block above any caching plugin blocks so
+     * the referer check runs before cached pages are served.
+     */
+    private function ensureHtaccessOrdering($htaccess) {
+        $content = file_get_contents($htaccess);
+
+        $our_begin = '# BEGIN Referer Spam Blocker';
+        $our_end   = '# END Referer Spam Blocker';
+
+        $our_begin_pos = strpos($content, $our_begin);
+        $our_end_pos   = strpos($content, $our_end);
+
+        if ($our_begin_pos === false || $our_end_pos === false) {
+            return;
+        }
+
+        // Known caching plugin begin markers
+        $cache_markers = array(
+            '# BEGIN WPRocket',
+            '# BEGIN W3TC',
+            '# BEGIN WP Super Cache',
+            '# BEGIN LiteSpeed',
+            '# BEGIN Autoptimize',
+            '# BEGIN Cache Enabler',
+        );
+
+        // Find the earliest caching plugin block
+        $earliest = false;
+        foreach ($cache_markers as $marker) {
+            $pos = strpos($content, $marker);
+            if ($pos !== false && ($earliest === false || $pos < $earliest)) {
+                $earliest = $pos;
+            }
+        }
+
+        // No caching plugin found, or we already appear before it
+        if ($earliest === false || $our_begin_pos < $earliest) {
+            return;
+        }
+
+        // Extract our full block (inclusive of both marker lines)
+        $block_end  = $our_end_pos + strlen($our_end);
+        $our_block  = substr($content, $our_begin_pos, $block_end - $our_begin_pos);
+
+        // Remove our block from its current position, collapsing the blank line it leaves
+        $before = substr($content, 0, $our_begin_pos);
+        $after  = ltrim(substr($content, $block_end), "\n");
+        $content_without = rtrim($before) . "\n\n" . $after;
+
+        // Recalculate position of the caching block after removal
+        $earliest_new = false;
+        foreach ($cache_markers as $marker) {
+            $pos = strpos($content_without, $marker);
+            if ($pos !== false && ($earliest_new === false || $pos < $earliest_new)) {
+                $earliest_new = $pos;
+            }
+        }
+
+        if ($earliest_new === false) {
+            return;
+        }
+
+        // Insert our block immediately before the earliest caching block
+        $new_content = substr($content_without, 0, $earliest_new)
+                     . $our_block . "\n\n"
+                     . substr($content_without, $earliest_new);
+
+        file_put_contents($htaccess, $new_content);
     }
 
     /**
