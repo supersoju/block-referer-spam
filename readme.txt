@@ -99,6 +99,21 @@ If you find a bug, please report it here. We will always aim to fix the issue wi
 
 == Changelog ==
 
+= 1.1.9.5 =
+* Security: added CSRF nonce check to the manual list-download action
+* Security: enabled TLS certificate verification on the pro license request
+* Security: fixed stored XSS in the Blocked Sites list and pro key status message
+* Security: replaced raw PHP stream request with the WordPress HTTP API for list downloads
+* Fix: flash messages no longer rely on PHP sessions (which were never started)
+* Fix: uninstall now removes all plugin options, .htaccess rules, and the scheduled cron event
+* Fix: scheduled cron event is now cleared on deactivation
+* Fix: daily cron now respects the Auto Update setting
+* Fix: PHP notice when no HTTP referer is present
+* Improvement: .htaccess rewrite rules are kept ahead of caching-plugin rules so Rewrite mode still blocks spam when a caching plugin is active
+* Improvement: admin notice when WordPress Block mode is active alongside a known caching plugin
+* Improvement: cache the merged block list to avoid re-parsing options on every request
+* Tested up to WordPress 7.0
+
 = 1.1.9.3 =
 * Tested for WordPress 5.0
 * Fix issue where updated list sometimes does not get written to .htaccess when called via cron
