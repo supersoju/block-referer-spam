@@ -549,6 +549,8 @@ class RefSpamBlocker {
         // save last updated stamp
         update_option('ref-blocker-updated', time());
 
+        $this->invalidateListCache();
+
         return true;
     }
 
@@ -625,6 +627,8 @@ class RefSpamBlocker {
 
         // update option
         update_option('ref-spam-custom-blocks', implode("\n", $customBlocks));
+
+        $this->invalidateListCache();
     }
 
     /**
@@ -634,6 +638,11 @@ class RefSpamBlocker {
      * @return array
      */
     private function getList() {
+        $cached = wp_cache_get('merged-list', 'ref-spam-blocker');
+        if ($cached !== false) {
+            return $cached;
+        }
+
         // get original list
         $list = preg_split('/[\n\r]+/', get_option('ref-blocker-list'));
 
@@ -646,7 +655,18 @@ class RefSpamBlocker {
         // clean up
         $list = array_unique(array_filter($list));
 
+        wp_cache_set('merged-list', $list, 'ref-spam-blocker', HOUR_IN_SECONDS);
+
         return $list;
+    }
+
+    /**
+     * invalidateListCache()
+     * Clears the cached merged block list after ref-blocker-list or
+     * ref-spam-custom-blocks changes.
+     */
+    private function invalidateListCache() {
+        wp_cache_delete('merged-list', 'ref-spam-blocker');
     }
 
     /**
