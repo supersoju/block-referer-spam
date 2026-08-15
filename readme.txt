@@ -2,7 +2,7 @@
 Contributors: supersoju, codestic
 Tags: spam, referer, semalt, buttons-for-website, floating-share-buttons, 4webmaster, ilovevitaly, referal, referral, analytics, analytics spam, referer spam, referrer spam, referal spam, referral spam, anti referer, anti referrer, anti referral, block analytics, anti-spam, spambot, spam-bot, spam bot, bot block, google spam, seo spam, referer attack, referral attack, referer blockieren, referrer blockieren, spam blockieren, bot filter, spam attack
 Requires at least: 3.0.2
-Tested up to: 7.0
+Tested up to: 7.0.3
 Stable tag: 1.1.9.5
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
@@ -112,7 +112,7 @@ If you find a bug, please report it here. We will always aim to fix the issue wi
 * Improvement: .htaccess rewrite rules are kept ahead of caching-plugin rules so Rewrite mode still blocks spam when a caching plugin is active
 * Improvement: admin notice when WordPress Block mode is active alongside a known caching plugin
 * Improvement: cache the merged block list to avoid re-parsing options on every request
-* Tested up to WordPress 7.0
+* Tested up to WordPress 7.0.3
 
 = 1.1.9.3 =
 * Tested for WordPress 5.0
