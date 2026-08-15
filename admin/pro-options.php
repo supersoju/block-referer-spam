@@ -26,4 +26,3 @@
     </div>
 </div>
 
-<?php unset($_SESSION['ref-spam-block-flash']); ?>
