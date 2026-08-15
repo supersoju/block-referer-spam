@@ -3,6 +3,10 @@ name: CI
 on:
   pull_request:
     branches: [master]
+  # TEMPORARY: trigger on push too, to confirm the Gitea Actions runner is
+  # actually picking up workflows. Revert once confirmed working.
+  push:
+    branches: [fix-caching-notice]
 
 jobs:
   php-syntax:
