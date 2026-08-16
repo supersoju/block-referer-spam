@@ -5,7 +5,7 @@ Blocks referer/referral spam bots from accessing your site and keeps them out of
 - **Contributors:** supersoju, codestic
 - **Requires at least:** WordPress 3.0.2
 - **Tested up to:** WordPress 7.0.3
-- **Stable tag:** 1.1.9.5
+- **Stable tag:** 1.2
 - **License:** [GPLv2 or later](http://www.gnu.org/licenses/gpl-2.0.html)
 
 ## Description

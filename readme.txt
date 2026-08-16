@@ -3,7 +3,7 @@ Contributors: supersoju, codestic
 Tags: spam, referer spam, referrer spam, referral spam, analytics spam, semalt, anti-spam, spambot, bot block, security
 Requires at least: 3.0.2
 Tested up to: 7.0.3
-Stable tag: 1.1.9.5
+Stable tag: 1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -105,7 +105,7 @@ Please report it — we aim to fix reported issues quickly.
 
 == Changelog ==
 
-= 1.1.9.5 =
+= 1.2 =
 * Security: added a CSRF nonce check to the manual list-download action
 * Security: enabled TLS certificate verification on the pro license request
 * Security: fixed stored XSS in the Blocked Sites list and the pro key status message
