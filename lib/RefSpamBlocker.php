@@ -562,10 +562,6 @@ class RefSpamBlocker {
      * Verifies that only valid domains are being saved.
      */
     private function verifyCustomBlocks() {
-        // use IDN class
-        require_once(__DIR__ . '/phlylabs/idna_convert.class.php');
-        $IDN = new idna_convert();
-
         // get list
         $list = array_unique(array_filter(preg_split('/[\n\r]+/', get_option('ref-blocker-list'))));
 
@@ -586,7 +582,7 @@ class RefSpamBlocker {
             }
 
             // decode, may be an IDN domain
-            $hostIdn = $IDN->encode($host);
+            $hostIdn = $this->idnEncode($host);
 
             // add scheme if missing
             if (!wp_parse_url($hostIdn, PHP_URL_SCHEME)) {
@@ -595,7 +591,7 @@ class RefSpamBlocker {
 
             // parse URL/host
             $hostIdn = wp_parse_url($hostIdn, PHP_URL_HOST);
-            $host = $IDN->decode($hostIdn);
+            $host = $this->idnDecode($hostIdn);
 
             // quit right here!
             if (!isset($hostIdn)) {
@@ -632,6 +628,45 @@ class RefSpamBlocker {
         update_option('ref-spam-custom-blocks', implode("\n", $customBlocks));
 
         $this->invalidateListCache();
+    }
+
+    /**
+     * idnEncode()
+     * Converts a domain to its ASCII/Punycode form. Uses the native intl extension
+     * when available (present on most hosts today) and only falls back to the bundled
+     * pure-PHP codec — kept for the hosts without ext-intl this plugin still supports —
+     * when the native function is unavailable or fails to encode the input.
+     */
+    private function idnEncode($string) {
+        if (function_exists('idn_to_ascii')) {
+            $result = idn_to_ascii($string, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            if ($result !== false) {
+                return $result;
+            }
+        }
+
+        require_once(__DIR__ . '/phlylabs/idna_convert.class.php');
+        $IDN = new idna_convert();
+
+        return $IDN->encode($string);
+    }
+
+    /**
+     * idnDecode()
+     * Converts a Punycode-encoded domain back to its Unicode form. See idnEncode().
+     */
+    private function idnDecode($string) {
+        if (function_exists('idn_to_utf8')) {
+            $result = idn_to_utf8($string, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            if ($result !== false) {
+                return $result;
+            }
+        }
+
+        require_once(__DIR__ . '/phlylabs/idna_convert.class.php');
+        $IDN = new idna_convert();
+
+        return $IDN->decode($string);
     }
 
     /**
