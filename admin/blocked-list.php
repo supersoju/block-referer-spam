@@ -21,8 +21,8 @@
                                 <ul class="ref-block-list">
                                     <?php foreach ($list as $host) : ?>
                                         <li>
-                                            <?php echo $host; ?>
-                                            (<a href="https://href.li/?http://<?php echo $host; ?>" target="_blank"><?php _e('Open', 'ref-spam-blocker'); ?></a>)
+                                            <?php echo esc_html($host); ?>
+                                            (<a href="<?php echo esc_url('https://href.li/?http://' . $host); ?>" target="_blank"><?php _e('Open', 'ref-spam-blocker'); ?></a>)
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -41,8 +41,8 @@
                                 <ul class="ref-block-list">
                                     <?php foreach ($list as $host) : ?>
                                         <li>
-                                            <?php echo $host; ?>
-                                            (<a href="https://href.li/?http://<?php echo $host; ?>" target="_blank"><?php _e('Open', 'ref-spam-blocker'); ?></a>)
+                                            <?php echo esc_html($host); ?>
+                                            (<a href="<?php echo esc_url('https://href.li/?http://' . $host); ?>" target="_blank"><?php _e('Open', 'ref-spam-blocker'); ?></a>)
                                         </li>
                                     <?php endforeach; ?>
                                 </ul>
@@ -69,4 +69,3 @@
     </div>
 </div>
 
-<?php unset($_SESSION['ref-spam-block-flash']); ?>

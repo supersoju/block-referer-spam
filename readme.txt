@@ -1,17 +1,24 @@
 === Block Referer Spam ===
 Contributors: supersoju, codestic
-Tags: spam, referer, semalt, buttons-for-website, floating-share-buttons, 4webmaster, ilovevitaly, referal, referral, analytics, analytics spam, referer spam, referrer spam, referal spam, referral spam, anti referer, anti referrer, anti referral, block analytics, anti-spam, spambot, spam-bot, spam bot, bot block, google spam, seo spam, referer attack, referral attack, referer blockieren, referrer blockieren, spam blockieren, bot filter, spam attack
+Tags: spam, referer spam, referrer spam, referral spam, analytics spam, semalt, anti-spam, spambot, bot block, security
 Requires at least: 3.0.2
-Tested up to: 6.2
-Stable tag: 1.1.9.5
+Tested up to: 7.0.3
+Stable tag: 1.2
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-Blocks referer/referral spam from accessing your site and cleans up your Google Analytics in the process!
+Blocks referer/referral spam bots from accessing your site and keeps them out of your analytics.
 
 == Description ==
 
-__Block Referer Spam__ aims at blocking all (or most) websites that use Referer Spam to promote their – often somewhat dodgy – website content. This is accomplished by bots that simulate human behavior. They do this so well, that they even show up in __Google Analytics__. This plugin does not require any special configuration after installation. Once active and auto-update is enabled, you will barely see any of those nasty spammers any more.
+**Block Referer Spam** stops the bots that fake an `HTTP_REFERER` header to advertise their own site in your traffic logs and analytics. They're good enough at simulating real visits that they show up in **Google Analytics** right alongside genuine traffic — this plugin blocks the known offenders before they're ever logged, and needs no configuration to start working.
+
+Two blocking modes cover different hosting setups:
+
+* **Rewrite mode** (Apache only) — adds `RewriteCond` rules to `.htaccess` so spam requests are rejected by the web server itself, before WordPress even loads. Fastest option, and the default when your host is detected as Apache.
+* **WordPress mode** — checks the referer during normal WordPress request handling and returns a 403. Works on any host, including nginx, but can't intercept a request that's served entirely from a full-page cache (see the FAQ below) — the plugin will warn you on its settings page if it detects an active caching plugin while running in this mode.
+
+The block list itself is a mix of several public spam-referer sources, merged and refreshed automatically once a day (or on demand from the settings page). You can also add your own domains to block, including internationalized (non-ASCII) domain names — they're normalized automatically.
 
 From [Wikipedia](https://en.wikipedia.org/wiki/Referer_spam):
 
@@ -29,20 +36,21 @@ This benefits the spammer because the free link improves
 the spammer site's search engine ranking owing
 to link-counting algorithms that search engines use.`
 
-__Features__
+= Features =
 
-* Automatic or manual updates of referer spam list
-* Option of adding custom referer spam hosts
-* Two methods of blocking: mod_rewrite or WordPress based
+* Automatic daily updates of the referer spam block list, or trigger an update manually
+* Add your own custom domains to the block list, with automatic IDN/Punycode normalization
+* Two blocking modes to fit Apache or non-Apache hosting: mod_rewrite or WordPress-level
+* Warns you if a caching plugin is likely to interfere with WordPress-mode blocking
 
-__Pro Features__
+= Pro =
 
-Pro plans start at only $2/mo. Visit [BlockReferSpam.com](https://blockreferspam.com) for more information.
+Pro plans start at $2/mo. Visit [BlockReferSpam.com](https://blockreferspam.com) for more information.
 
-* Automatic syncing your of custom block lists across all of your sites
-* Additional curated block lists
+* Sync your custom block list across all of your registered sites
+* Access to additional curated block lists
 
-__Examples Blocked__
+= Examples Blocked =
 
 * semalt
 * buttons-for-website
@@ -51,53 +59,68 @@ __Examples Blocked__
 * ilovevitaly
 * ... and many more!
 
-If you think you found a bug in Referer Spam Blocker, please contact us! Further, if you want to contribute, feel free!
-
-Anything else, please get in touch!
-
-support / supersoju.com
+Found a bug, or want to contribute? Get in touch — support / supersoju.com
 
 Cover photo by [Lukas Budimaier](https://unsplash.com/@lukasbudimaier)
 
-== Screenshots ==
-
-1. Admin Interface
-
 == Installation ==
 
-To install Block Referer Spam and start cleaning up your Google Analytics:
+1. Install Block Referer Spam automatically, or upload the plugin ZIP file.
+2. Activate the plugin through the "Plugins" menu in WordPress.
+3. Go to the "Referer Spam" admin menu to review your blocking mode and options — the defaults work for most sites without any changes.
 
-1. Install Block Referer Spam automatically or by uploading the ZIP file.
-2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Block Referer Spam is now activated. Go to the "Referer Spam" menu and start review your options.
-4. You are now protected!
+= Using WP-CLI =
 
-__Using WP-CLI__
 `wp plugin install block-referer-spam --activate`
 
 == Frequently Asked Questions ==
 
 = What sites are blocked? =
 
-To give you the least amount of headache, this plugin is not using one, but indeed several sources of referer spam lists. Our servers merge multiple lists every couple hours to provide you with the best possible protection.
+This plugin merges several public referer-spam block lists rather than relying on just one, refreshed automatically once a day, to keep coverage broad.
 
-= I still see those websites in my statistics! =
+= I still see those websites in my Google Analytics history! =
 
-This plugin will not remove existing Google Analytics Spam. What it will do is block further spam from being logged. You can however filter out those websites, a good tutorial for this is here: https://megalytic.com/blog/how-to-filter-out-fake-referrals-and-other-google-analytics-spam.
+Block Referer Spam prevents *new* spam hits from being logged — it doesn't retroactively clean up analytics data you already have. To filter out existing spam entries in Google Analytics, see [this tutorial](https://megalytic.com/blog/how-to-filter-out-fake-referrals-and-other-google-analytics-spam).
 
-= I tested my site and those referers can still access my site! =
+= I tested my site and a known spam referer can still get through! =
 
-This can by caused by three reasons.
+A few common causes:
 
-1. The site is not blocked by our list. The list is updated multiple times a day (every 6 hours) and chances are the site will be on it very soon. If not, try custom blocks.
-2. Some plugins interfere with the "Rewrite" block mode on server side level. Examples for these are caching plugins that may not always work. In this case, use the "WordPress" block mode instead.
-3. While using the "Rewrite" block mode is faster, you may not be able to write to your servers .htaccess file, in this case please use the "WordPress" block mode instead.
+1. **The site isn't on the block list yet.** The list refreshes once a day, so very new spam domains may take a little while to be added. In the meantime, add it as a custom block yourself.
+2. **A caching plugin is serving the request from cache.** In WordPress blocking mode, a full-page cache (e.g. WP Rocket, W3 Total Cache, WP Super Cache, LiteSpeed Cache) can serve a cached page before WordPress — and this plugin — ever runs. Switch to Rewrite mode (Apache only) if you're using a caching plugin, since it blocks at the web-server level before caching applies.
+3. **Your host doesn't support Rewrite mode.** If `.htaccess` isn't writable, or you're not on Apache, use WordPress mode instead.
+
+= Does this work with caching plugins? =
+
+Rewrite mode does, since it blocks before caching applies. WordPress mode can be bypassed by full-page caching — the plugin detects common caching plugins and shows a warning on its settings page if you're running WordPress mode alongside one, so you can switch to Rewrite mode if your host supports it.
 
 = I found a bug! =
 
-If you find a bug, please report it here. We will always aim to fix the issue within 48 hours.
+Please report it — we aim to fix reported issues quickly.
+
+== Screenshots ==
+
+1. Admin Interface
 
 == Changelog ==
+
+= 1.2 =
+* Security: added a CSRF nonce check to the manual list-download action
+* Security: enabled TLS certificate verification on the pro license request
+* Security: fixed stored XSS in the Blocked Sites list and the pro key status message
+* Security: replaced a raw PHP stream request with the WordPress HTTP API for list downloads
+* Fix: flash messages no longer rely on PHP sessions (which were never actually started)
+* Fix: uninstall now removes all plugin options, `.htaccess` rules, and the scheduled cron event
+* Fix: scheduled cron event is now cleared on deactivation, instead of left running
+* Fix: daily cron now respects the Auto Update setting instead of ignoring it
+* Fix: PHP notice when no HTTP referer is present on the request
+* Fix: removed unused/dead code left over from the bundled IDN library that failed to parse on PHP 8
+* Improvement: `.htaccess` rewrite rules are kept ahead of caching-plugin rules, so Rewrite mode still blocks spam when a caching plugin is active
+* Improvement: new admin notice when WordPress Block mode is active alongside a known caching plugin
+* Improvement: the merged block list is now cached instead of re-parsed on every request
+* Improvement: custom-block domain normalization now uses PHP's native IDN support when available, only falling back to the bundled library on hosts without it
+* Tested up to WordPress 7.0.3
 
 = 1.1.9.3 =
 * Tested for WordPress 5.0

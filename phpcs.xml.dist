@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<ruleset name="BlockRefererSpam">
+    <description>WPCS ruleset for the Block Referer Spam plugin</description>
+
+    <arg value="sp"/>
+    <arg name="basepath" value="."/>
+    <arg name="colors"/>
+    <arg name="extensions" value="php"/>
+
+    <!--
+        Warnings (e.g. "use wp_remote_get() instead of file_get_contents()") stay visible in report
+        output but don't fail the build — they're real but lower-priority than the errors (unescaped
+        output, unsanitized input, missing nonces) this gate exists to block on.
+    -->
+    <config name="ignore_warnings_on_exit" value="1"/>
+
+    <file>.</file>
+
+    <!-- Bundled third-party library — not our code, don't lint it. -->
+    <exclude-pattern>lib/phlylabs/*</exclude-pattern>
+    <exclude-pattern>vendor/*</exclude-pattern>
+
+    <!--
+        The full WordPress standard (formatting, docblocks, tabs-vs-spaces) doesn't match this
+        codebase's existing style and would fail on every PR regardless of content. Scoped instead
+        to the security/correctness sniffs that actually catch real bugs: unescaped output, missing
+        nonce checks, unsanitized input, unprepared SQL, and use of discouraged/dangerous functions.
+    -->
+    <rule ref="WordPress.Security">
+        <!--
+            Flags every _e()/__() call as "unsafe" since it can't statically prove the translated
+            string is safe. The admin templates use _e() throughout, including for strings with
+            embedded HTML (e.g. "<b>...</b>"), which esc_html_e() would break. Converting the whole
+            admin UI's translation calls is a real refactor, not a lint-gate concern — tracked
+            separately. OutputNotEscaped (raw variable echoes, the actual XSS class) stays active.
+        -->
+        <exclude name="WordPress.Security.EscapeOutput.UnsafePrintingFunction"/>
+    </rule>
+    <rule ref="WordPress.DB.PreparedSQL"/>
+    <rule ref="WordPress.DB.PreparedSQLPlaceholders"/>
+    <rule ref="WordPress.PHP.DiscouragedPHPFunctions"/>
+    <rule ref="WordPress.PHP.DontExtract"/>
+    <rule ref="WordPress.WP.AlternativeFunctions"/>
+    <rule ref="Generic.PHP.DeprecatedFunctions"/>
+</ruleset>

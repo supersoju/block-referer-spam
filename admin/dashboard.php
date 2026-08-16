@@ -1,31 +1,32 @@
 <div class="wrap">
     <h2><?php _e('Block Referer Spam', 'ref-spam-blocker'); ?></h2>
 
-    <?php if (isset($_SESSION['ref-spam-block-flash'])) : ?>
-        <?php if ($_SESSION['ref-spam-block-flash'] == 'list-updated') : ?>
-            <div id="message" class="updated">
-                <p><strong><?php _e('List updated.', 'ref-spam-blocker') ?></strong></p>
-            </div>
-
-        <?php elseif ($_SESSION['ref-spam-block-flash'] == 'list-not-updated') : ?>
-            <div id="message" class="error">
-                <p><strong><?php _e('List failed to update.', 'ref-spam-blocker') ?></strong></p>
-            </div>
-        <?php endif; ?>
+    <?php
+    $flash = get_transient('ref_spam_flash_' . get_current_user_id());
+    if ($flash) {
+        delete_transient('ref_spam_flash_' . get_current_user_id());
+    }
+    ?>
+    <?php if ($flash === 'list-updated') : ?>
+        <div id="message" class="updated">
+            <p><strong><?php _e('List updated.', 'ref-spam-blocker') ?></strong></p>
+        </div>
+    <?php elseif ($flash === 'list-not-updated') : ?>
+        <div id="message" class="error">
+            <p><strong><?php _e('List failed to update.', 'ref-spam-blocker') ?></strong></p>
+        </div>
     <?php endif; ?>
 
-    <?php if (isset($_SESSION['ref-spam-block-proflash'])) { ?>
-        <?php
-        $message_class = "error";
-        if($_SESSION['ref-spam-block-proflash-status'] == 'success'){
-            $message_class = "updated";
-        };
-        ?>
-
-        <div id="message" class="<?php echo $message_class; ?>">
-            <p><strong><?php echo $_SESSION['ref-spam-block-proflash']; ?></strong></p>
+    <?php
+    $proflash = get_transient('ref_spam_proflash_' . get_current_user_id());
+    if ($proflash) {
+        delete_transient('ref_spam_proflash_' . get_current_user_id());
+        $message_class = ($proflash['status'] === 'success') ? 'updated' : 'error';
+    ?>
+        <div id="message" class="<?php echo esc_attr($message_class); ?>">
+            <p><strong><?php echo esc_html($proflash['message']); ?></strong></p>
         </div>
-    <?php }; ?>
+    <?php } ?>
 
     <?php if (get_option('ref-spam-block-mode', 'rewrite') == 'rewrite' && (!is_writable(get_home_path() . '.htaccess'))) : ?>
         <div id="message" class="error">
@@ -63,7 +64,7 @@
                                             <input type="hidden" name="ref-spam-pro-active" value="<?php echo esc_attr(get_option('ref-spam-pro-active')); ?>" />
 
                                             <p class="description">
-                                            Pro version will allow you to sync your custom blocks across all of your registered sites. Get your key at <a href="https://blockreferspam.com/pro" target="_blank">BlockReferSpam.com</a> <?php echo get_option('ref-spam-pro-active'); ?>.
+                                            Pro version will allow you to sync your custom blocks across all of your registered sites. Get your key at <a href="https://blockreferspam.com/pro" target="_blank">BlockReferSpam.com</a> <?php echo esc_html(get_option('ref-spam-pro-active')); ?>.
                                             </p>
                                         </td>
                                     </tr>
@@ -97,7 +98,7 @@
                                         <td>
                                             <fieldset>
                                                 <label>
-                                                    <?php if (preg_match('/apache/i', $_SERVER['SERVER_SOFTWARE'])) : ?>
+                                                    <?php if (preg_match('/apache/i', isset($_SERVER['SERVER_SOFTWARE']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])) : '')) : ?>
                                                         <input type="radio" name="ref-spam-block-mode"
                                                                value="rewrite"<?php echo(get_option('ref-spam-block-mode', 'rewrite') == 'rewrite' ? ' checked="checked"' : '') ?>>
                                                         <span><?php _e('Rewrite Block', 'ref-spam-blocker'); ?></span>
@@ -128,7 +129,7 @@
                                     <tr>
                                         <th><label><?php _e('Manual Update', 'ref-spam-blocker'); ?></label></th>
                                         <td>
-                                            <a href="admin.php?page=ref-spam-block&download=true"
+                                            <a href="<?php echo esc_url(wp_nonce_url(admin_url('admin.php?page=ref-spam-block&download=true'), 'ref-spam-download')); ?>"
                                                class="button button-secondary"><?php _e('Download Updates', 'ref-spam-blocker'); ?></a>
 
                                             <p class="description">
@@ -142,7 +143,7 @@
                                         <td>
                                             <p>
                                                 <?php if (get_option('ref-blocker-updated') !== false) : ?>
-                                                    <?php echo date_i18n(get_option('date_format'), get_option('ref-blocker-updated')) . ' ' . date_i18n(get_option('time_format'), get_option('ref-blocker-updated')); ?>
+                                                    <?php echo esc_html(date_i18n(get_option('date_format'), get_option('ref-blocker-updated')) . ' ' . date_i18n(get_option('time_format'), get_option('ref-blocker-updated'))); ?>
 
                                                     <br>
 
@@ -155,8 +156,8 @@
                                                     <?php $list = array_filter(preg_split('/[\n\r]+/', get_option('ref-spam-custom-blocks'))); ?>
 
                                                     <span class="ref-block-hint">
-                                                        <?php echo sprintf(__('%s Sites Blocked', 'ref-spam-blocker'), $count); ?>
-                                                        (<a href="<?php echo admin_url('admin.php?page=ref-spam-list'); ?>"><?php _e('See List', 'ref-spam-blocker'); ?></a>)
+                                                        <?php echo esc_html(sprintf(__('%s Sites Blocked', 'ref-spam-blocker'), $count)); ?>
+                                                        (<a href="<?php echo esc_url(admin_url('admin.php?page=ref-spam-list')); ?>"><?php _e('See List', 'ref-spam-blocker'); ?></a>)
                                                     </span>
                                                 <?php else : ?>
                                                     <?php _e('Never', 'ref-spam-blocker'); ?>
@@ -203,4 +204,3 @@
     </div>
 </div>
 
-<?php unset($_SESSION['ref-spam-block-flash']); ?>

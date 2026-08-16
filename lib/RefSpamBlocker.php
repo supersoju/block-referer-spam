@@ -2,7 +2,7 @@
 
 namespace WPBlockRefererSpam;
 
-require_once(__DIR__ . '/../../../../wp-admin/includes/misc.php');
+require_once ABSPATH . 'wp-admin/includes/misc.php';
 
 /**
  * RefSpamBlocker
@@ -59,7 +59,8 @@ class RefSpamBlocker {
      */
     public function activate() {
         // if not apache, set block mode default to WordPress block
-        if (!preg_match('/apache/i', $_SERVER['SERVER_SOFTWARE'])) {
+        $serverSoftware = isset($_SERVER['SERVER_SOFTWARE']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_SOFTWARE'])) : '';
+        if (!preg_match('/apache/i', $serverSoftware)) {
             update_option('ref-spam-block-mode', 'wordpress');
         }
 
@@ -72,6 +73,7 @@ class RefSpamBlocker {
      */
     public function deactivate() {
         $this->resetHtaccess();
+        wp_clear_scheduled_hook('dailyCronjob');
     }
 
     /**
@@ -81,6 +83,7 @@ class RefSpamBlocker {
         // init
         add_action('admin_init', array(&$this, 'adminInit'));
         add_action('admin_menu', array(&$this, 'createMenu'));
+        add_action('admin_notices', array(&$this, 'cachingPluginNotice'));
 
         /*
         if (!session_id()) {
@@ -98,6 +101,68 @@ class RefSpamBlocker {
     }
 
     /**
+     * cachingPluginNotice()
+     * Shows a warning on the plugin's own admin pages when WordPress block mode
+     * is active and a full-page caching plugin is detected, since cached pages
+     * are served before the wp hook fires.
+     */
+    public function cachingPluginNotice() {
+        // Only show on this plugin's pages
+        $page = isset($_GET['page']) ? sanitize_text_field(wp_unslash($_GET['page'])) : '';
+        if (strpos($page, 'ref-spam') === false) {
+            return;
+        }
+
+        if (get_option('ref-spam-block-mode', 'rewrite') !== 'wordpress') {
+            return;
+        }
+
+        $detected = $this->detectActiveCachingPlugin();
+        if (!$detected) {
+            return;
+        }
+
+        echo '<div class="notice notice-warning">'
+            . '<p><strong>' . esc_html__('Block Referer Spam — Caching Plugin Conflict', 'ref-spam-blocker') . '</strong></p>'
+            . '<p>' . sprintf(
+                esc_html__('%s is active. Full-page caching serves pages before WordPress runs, so WordPress Block mode cannot intercept those requests. Switch to Rewrite Block mode (Apache only) to block referer spam reliably when caching is enabled.', 'ref-spam-blocker'),
+                '<strong>' . esc_html($detected) . '</strong>'
+            ) . '</p>'
+            . '</div>';
+    }
+
+    /**
+     * detectActiveCachingPlugin()
+     * Returns the display name of the first detected active caching plugin, or false.
+     */
+    private function detectActiveCachingPlugin() {
+        $plugins = array(
+            'wp-rocket/wp-rocket.php'                       => 'WP Rocket',
+            'w3-total-cache/w3-total-cache.php'             => 'W3 Total Cache',
+            'wp-super-cache/wp-cache.php'                   => 'WP Super Cache',
+            'litespeed-cache/litespeed-cache.php'           => 'LiteSpeed Cache',
+            'autoptimize/autoptimize.php'                   => 'Autoptimize',
+            'cache-enabler/cache-enabler.php'               => 'Cache Enabler',
+            'comet-cache/comet-cache.php'                   => 'Comet Cache',
+            'hummingbird-performance/wp-hummingbird.php'    => 'Hummingbird',
+            'sg-cachepress/sg-cachepress.php'               => 'SG Optimizer',
+            'swift-performance-lite/swift-performance-lite.php' => 'Swift Performance',
+        );
+
+        if (!function_exists('is_plugin_active')) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+
+        foreach ($plugins as $file => $name) {
+            if (is_plugin_active($file)) {
+                return $name;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * pluginLoad()
      * Currently only used to load the registered CSS styles
      */
@@ -111,8 +176,8 @@ class RefSpamBlocker {
      */
     public function createMenu() {
         $hook = add_menu_page(
-            __('Block Referer Spam'),
-            __('Referer Spam'),
+            __('Block Referer Spam', 'ref-spam-blocker'),
+            __('Referer Spam', 'ref-spam-blocker'),
             'manage_options',
             'ref-spam-block/',
             array(&$this, 'adminDashboard'),
@@ -162,19 +227,18 @@ class RefSpamBlocker {
 
         // download
         if (isset($_GET['download']) && $_GET['download'] == 'true') {
+            check_admin_referer('ref-spam-download');
             if ($this->downloadList()) {
-                //add_settings_error('list-updated', 'list-updated', 'UPDATED', 'updated');
-                $_SESSION['ref-spam-block-flash'] = 'list-updated';
+                set_transient('ref_spam_flash_' . get_current_user_id(), 'list-updated', 60);
                 header('Location: admin.php?page=ref-spam-block');
 
             } else {
-                //add_settings_error('list-updated', 'list-updated', 'UPDATED', 'error');
-                $_SESSION['ref-spam-block-flash'] = 'list-not-updated';
+                set_transient('ref_spam_flash_' . get_current_user_id(), 'list-not-updated', 60);
                 header('Location: admin.php?page=ref-spam-block&downloaded=false');
             }
             exit;
 
-        } elseif (isset($_GET['settings-updated']) && $_GET['settings-updated']) {
+        } elseif (isset($_GET['settings-updated']) && sanitize_text_field(wp_unslash($_GET['settings-updated']))) {
             // verify custom blocks
             $this->verifyCustomBlocks();
 
@@ -221,11 +285,87 @@ class RefSpamBlocker {
         $lines[] = '  RewriteRule .* - [F]';
         $lines[] = '</IfModule>';
 
-        // create copy of current .htaccess
-        copy($htaccess, $htaccess . '.bak');
+        // back up current .htaccess contents in an option rather than a
+        // world-readable .bak file left sitting in the webroot
+        update_option('ref-spam-htaccess-backup', file_get_contents($htaccess), false);
 
         // update htaccess
         insert_with_markers($htaccess, 'Referer Spam Blocker', $lines);
+
+        // ensure our block runs before any caching plugin rules
+        $this->ensureHtaccessOrdering($htaccess);
+    }
+
+    /**
+     * ensureHtaccessOrdering()
+     * Moves the Referer Spam Blocker block above any caching plugin blocks so
+     * the referer check runs before cached pages are served.
+     */
+    private function ensureHtaccessOrdering($htaccess) {
+        $content = file_get_contents($htaccess);
+
+        $our_begin = '# BEGIN Referer Spam Blocker';
+        $our_end   = '# END Referer Spam Blocker';
+
+        $our_begin_pos = strpos($content, $our_begin);
+        $our_end_pos   = strpos($content, $our_end);
+
+        if ($our_begin_pos === false || $our_end_pos === false) {
+            return;
+        }
+
+        // Known caching plugin begin markers
+        $cache_markers = array(
+            '# BEGIN WPRocket',
+            '# BEGIN W3TC',
+            '# BEGIN WP Super Cache',
+            '# BEGIN LiteSpeed',
+            '# BEGIN Autoptimize',
+            '# BEGIN Cache Enabler',
+        );
+
+        // Find the earliest caching plugin block
+        $earliest = false;
+        foreach ($cache_markers as $marker) {
+            $pos = strpos($content, $marker);
+            if ($pos !== false && ($earliest === false || $pos < $earliest)) {
+                $earliest = $pos;
+            }
+        }
+
+        // No caching plugin found, or we already appear before it
+        if ($earliest === false || $our_begin_pos < $earliest) {
+            return;
+        }
+
+        // Extract our full block (inclusive of both marker lines)
+        $block_end  = $our_end_pos + strlen($our_end);
+        $our_block  = substr($content, $our_begin_pos, $block_end - $our_begin_pos);
+
+        // Remove our block from its current position, collapsing the blank line it leaves
+        $before = substr($content, 0, $our_begin_pos);
+        $after  = ltrim(substr($content, $block_end), "\n");
+        $content_without = rtrim($before) . "\n\n" . $after;
+
+        // Recalculate position of the caching block after removal
+        $earliest_new = false;
+        foreach ($cache_markers as $marker) {
+            $pos = strpos($content_without, $marker);
+            if ($pos !== false && ($earliest_new === false || $pos < $earliest_new)) {
+                $earliest_new = $pos;
+            }
+        }
+
+        if ($earliest_new === false) {
+            return;
+        }
+
+        // Insert our block immediately before the earliest caching block
+        $new_content = substr($content_without, 0, $earliest_new)
+                     . $our_block . "\n\n"
+                     . substr($content_without, $earliest_new);
+
+        file_put_contents($htaccess, $new_content);
     }
 
     /**
@@ -269,42 +409,44 @@ class RefSpamBlocker {
         $pro_key = get_option('ref-spam-pro-key');
         $pro_key_active = get_option('ref-spam-pro-active');
 
-        if($pro_key_active == 'active'){
+        if ($pro_key_active == 'active') {
+            return true;
+        }
 
+        $api_params = array(
+            'slm_action' => 'slm_activate',
+            'secret_key' => REFSPAMBLOCKER_KEY,
+            'license_key' => $pro_key,
+            'registered_domain' => isset($_SERVER['SERVER_NAME']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_NAME'])) : ''
+        );
+
+        $query = esc_url_raw(add_query_arg($api_params, 'https://www.blockreferspam.com/pro'));
+        $response = wp_remote_get($query, array('timeout' => 20));
+
+        if (is_wp_error($response)) {
+            set_transient('ref_spam_proflash_' . get_current_user_id(), array(
+                'status'  => 'error',
+                'message' => 'Unexpected Error! The query returned with an error.',
+            ), 60);
+            return false;
+        }
+
+        // License data.
+        $license_data = json_decode(wp_remote_retrieve_body($response));
+
+        if ($license_data->result == 'success') {
+            update_option('ref-spam-pro-active', 'active');
+            set_transient('ref_spam_proflash_' . get_current_user_id(), array(
+                'status'  => 'success',
+                'message' => 'Pro Version Activated',
+            ), 60);
         } else {
+            set_transient('ref_spam_proflash_' . get_current_user_id(), array(
+                'status'  => 'error',
+                'message' => 'The following message was returned from the server: ' . $license_data->message,
+            ), 60);
+        }
 
-            $api_params = array(
-                'slm_action' => 'slm_activate',
-                'secret_key' => REFSPAMBLOCKER_KEY,
-                'license_key' => $pro_key,
-                'registered_domain' => $_SERVER['SERVER_NAME']
-            );
-
-            $query = esc_url_raw(add_query_arg($api_params, 'https://www.blockreferspam.com/pro'));
-            $response = wp_remote_get($query, array('timeout' => 20, 'sslverify' => false));
-            if (is_wp_error($response)){
-                $message = "Unexpected Error! The query returned with an error.";
-                $_SESSION['ref-spam-block-proflash-status'] = 'error';
-            };
-
-            // License data.
-            $license_data = json_decode(wp_remote_retrieve_body($response));
-
-            if($license_data->result == 'success'){
-                //Uncomment the followng line to see the message that returned from the license server
-                //echo '<br />The following message was returned from the server: '.$license_data->message;
-                $message = "Pro Version Activated";
-                $_SESSION['ref-spam-block-proflash-status'] = 'success';
-                update_option('ref-spam-pro-active', 'active');
-            } else {
-                //Show error to the user. Probably entered incorrect license key.
-                $message .= 'The following message was returned from the server: ' . $license_data->message;
-                $_SESSION['ref-spam-block-proflash-status'] = 'error';
-                //update_option('ref-spam-pro-active', false);
-            };
-
-            $_SESSION['ref-spam-block-proflash'] = $message;
-        };
         return true;
     }
 
@@ -320,12 +462,13 @@ class RefSpamBlocker {
             return false;
         };
 
-        if(!$_SERVER['HTTP_REFERER']){
+        if(empty($_SERVER['HTTP_REFERER'])){
             return true;
         };
 
         // get domain
-        $domain = str_ireplace('www.', '', parse_url($_SERVER['HTTP_REFERER'], PHP_URL_HOST));
+        $referer = sanitize_text_field(wp_unslash($_SERVER['HTTP_REFERER']));
+        $domain = str_ireplace('www.', '', wp_parse_url($referer, PHP_URL_HOST));
 
         // get list
         $list = $this->getList();
@@ -334,7 +477,7 @@ class RefSpamBlocker {
             if (strpos($domain, $host) !== false) {
                 header('HTTP/1.0 403 Forbidden');
                 echo 'You are forbidden from accessing this website.<br>' .
-                    'Powered by <a href="' . REFSPAMBLOCKER_PLUGIN_URL . '">Referer Spam Blocker</a>.';
+                    'Powered by <a href="' . esc_url(REFSPAMBLOCKER_PLUGIN_URL) . '">Referer Spam Blocker</a>.';
                 exit;
             };
         };
@@ -352,38 +495,32 @@ class RefSpamBlocker {
         // get custom blocks
         $customBlocks = json_encode(array_filter(preg_split('/[\n\r]+/', get_option('ref-spam-custom-blocks'))));
 
-        // create context to send custom blocks back home
+        // create headers to send custom blocks back home
         $pro_key_active = get_option('ref-spam-pro-active');
-        if($pro_key_active == 'active'){
-            $header_array = array(
-                'Content-type: application/json',
-                'X-Client-Version: ' . REFSPAMBLOCKER_VERSION,
-                'X-URL-Hash: ' . md5(get_site_url()),
-                'X-Check-Domain: ' . $_SERVER['SERVER_NAME'],
-                'X-Lic-Key: ' . get_option('ref-spam-pro-key'),
-                'X-User-Agent: Block Referer Spam v' . REFSPAMBLOCKER_VERSION
-            );
-        } else {
-            $header_array = array(
-                'Content-type: application/json',
-                'X-Client-Version: ' . REFSPAMBLOCKER_VERSION,
-                'X-URL-Hash: ' . md5(get_site_url()),
-                'X-User-Agent: Block Referer Spam v' . REFSPAMBLOCKER_VERSION
-            );
-        };
-        $opts = array(
-            'http' =>
-                array(
-                    'method'  => 'PUT',
-                    'header'  => $header_array,
-                    'content' => $customBlocks,
-                    'timeout' => 30
-                )
+        $header_array = array(
+            'Content-type'    => 'application/json',
+            'X-Client-Version' => REFSPAMBLOCKER_VERSION,
+            'X-URL-Hash'      => md5(get_site_url()),
+            'X-User-Agent'    => 'Block Referer Spam v' . REFSPAMBLOCKER_VERSION,
         );
-        $context  = stream_context_create($opts);
+        if ($pro_key_active == 'active') {
+            $header_array['X-Check-Domain'] = isset($_SERVER['SERVER_NAME']) ? sanitize_text_field(wp_unslash($_SERVER['SERVER_NAME'])) : '';
+            $header_array['X-Lic-Key']      = get_option('ref-spam-pro-key');
+        };
 
         // download list and send custom blocks home
-        $list = @file_get_contents(REFSPAMBLOCKER_LIST_URL, false, $context);
+        $response = wp_remote_request(REFSPAMBLOCKER_LIST_URL, array(
+            'method'  => 'PUT',
+            'headers' => $header_array,
+            'body'    => $customBlocks,
+            'timeout' => 30,
+        ));
+
+        if (is_wp_error($response)) {
+            return false;
+        };
+
+        $list = wp_remote_retrieve_body($response);
 
         if (!$list) {
             return false;
@@ -391,7 +528,7 @@ class RefSpamBlocker {
 
         $list_obj = json_decode($list);
 
-        if(!$list_obj->list){
+        if (!is_object($list_obj) || empty($list_obj->list)) {
             return false;
         };
 
@@ -400,7 +537,7 @@ class RefSpamBlocker {
             $formatted_list .= $item . "\n";
         };
 
-        if($list_obj->custom_blocks){
+        if(!empty($list_obj->custom_blocks)){
             $custom_list = "";
             foreach($list_obj->custom_blocks as $item){
                 $custom_list .= $item . "\n";
@@ -415,6 +552,8 @@ class RefSpamBlocker {
         // save last updated stamp
         update_option('ref-blocker-updated', time());
 
+        $this->invalidateListCache();
+
         return true;
     }
 
@@ -423,10 +562,6 @@ class RefSpamBlocker {
      * Verifies that only valid domains are being saved.
      */
     private function verifyCustomBlocks() {
-        // use IDN class
-        require_once(__DIR__ . '/phlylabs/idna_convert.class.php');
-        $IDN = new idna_convert();
-
         // get list
         $list = array_unique(array_filter(preg_split('/[\n\r]+/', get_option('ref-blocker-list'))));
 
@@ -447,16 +582,16 @@ class RefSpamBlocker {
             }
 
             // decode, may be an IDN domain
-            $hostIdn = $IDN->encode($host);
+            $hostIdn = $this->idnEncode($host);
 
             // add scheme if missing
-            if (!parse_url($hostIdn, PHP_URL_SCHEME)) {
+            if (!wp_parse_url($hostIdn, PHP_URL_SCHEME)) {
                 $hostIdn = "http://{$hostIdn}";
             }
 
             // parse URL/host
-            $hostIdn = parse_url($hostIdn, PHP_URL_HOST);
-            $host = $IDN->decode($hostIdn);
+            $hostIdn = wp_parse_url($hostIdn, PHP_URL_HOST);
+            $host = $this->idnDecode($hostIdn);
 
             // quit right here!
             if (!isset($hostIdn)) {
@@ -491,6 +626,47 @@ class RefSpamBlocker {
 
         // update option
         update_option('ref-spam-custom-blocks', implode("\n", $customBlocks));
+
+        $this->invalidateListCache();
+    }
+
+    /**
+     * idnEncode()
+     * Converts a domain to its ASCII/Punycode form. Uses the native intl extension
+     * when available (present on most hosts today) and only falls back to the bundled
+     * pure-PHP codec — kept for the hosts without ext-intl this plugin still supports —
+     * when the native function is unavailable or fails to encode the input.
+     */
+    private function idnEncode($string) {
+        if (function_exists('idn_to_ascii')) {
+            $result = idn_to_ascii($string, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            if ($result !== false) {
+                return $result;
+            }
+        }
+
+        require_once(__DIR__ . '/phlylabs/idna_convert.class.php');
+        $IDN = new idna_convert();
+
+        return $IDN->encode($string);
+    }
+
+    /**
+     * idnDecode()
+     * Converts a Punycode-encoded domain back to its Unicode form. See idnEncode().
+     */
+    private function idnDecode($string) {
+        if (function_exists('idn_to_utf8')) {
+            $result = idn_to_utf8($string, IDNA_DEFAULT, INTL_IDNA_VARIANT_UTS46);
+            if ($result !== false) {
+                return $result;
+            }
+        }
+
+        require_once(__DIR__ . '/phlylabs/idna_convert.class.php');
+        $IDN = new idna_convert();
+
+        return $IDN->decode($string);
     }
 
     /**
@@ -500,6 +676,11 @@ class RefSpamBlocker {
      * @return array
      */
     private function getList() {
+        $cached = wp_cache_get('merged-list', 'ref-spam-blocker');
+        if ($cached !== false) {
+            return $cached;
+        }
+
         // get original list
         $list = preg_split('/[\n\r]+/', get_option('ref-blocker-list'));
 
@@ -512,7 +693,18 @@ class RefSpamBlocker {
         // clean up
         $list = array_unique(array_filter($list));
 
+        wp_cache_set('merged-list', $list, 'ref-spam-blocker', HOUR_IN_SECONDS);
+
         return $list;
+    }
+
+    /**
+     * invalidateListCache()
+     * Clears the cached merged block list after ref-blocker-list or
+     * ref-spam-custom-blocks changes.
+     */
+    private function invalidateListCache() {
+        wp_cache_delete('merged-list', 'ref-spam-blocker');
     }
 
     /**
@@ -541,6 +733,11 @@ class RefSpamBlocker {
      * Executed daily to update list and htaccess file
      */
     public function dailyCronjob() {
+        // respect the auto-update setting
+        if (get_option('ref-spam-auto-update', 'yes') !== 'yes') {
+            return;
+        }
+
         // download list
         $this->downloadList();
 
@@ -551,9 +748,10 @@ class RefSpamBlocker {
     }
 
     /**
-     * Destroy session data when logging out
+     * Clear flash transients on logout
      */
     public function logout() {
-        //session_destroy();
+        delete_transient('ref_spam_flash_' . get_current_user_id());
+        delete_transient('ref_spam_proflash_' . get_current_user_id());
     }
 }
